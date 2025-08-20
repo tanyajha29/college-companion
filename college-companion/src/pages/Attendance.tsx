@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 type Subject = {
   id: number;
@@ -6,7 +6,16 @@ type Subject = {
   total: number;
   present: number;
 };
-// Subject Icon Mapping
+
+// Subjects for each department
+const departmentSubjects: Record<string, string[]> = {
+  INFT: ["Mathematics", "DBMS", "Operating Systems", "Computer Networks"],
+  CMPN: ["Mathematics", "Data Structures", "Algorithms", "Software Engg"],
+  EXTC: ["Electronics", "Signal Processing", "Control Systems", "Analog Circuits"],
+  ETRX: ["Electronics", "VLSI", "Communication Engg", "Control Systems"],
+};
+
+// Subject → Icon mapping
 const subjectIcons: Record<string, string> = {
   Mathematics: "/icons/mathematics.png",
   DBMS: "/icons/dbms.png",
@@ -20,138 +29,122 @@ const subjectIcons: Record<string, string> = {
   "Control Systems": "/icons/controlsystems.png",
   "Analog Circuits": "/icons/analogcircuits.png",
   "Communication Engg": "/icons/communicationEngg.png",
-  VLSI: "/icons/VLSI.png",
+  VLSI: "/icons/vlsi.png",
 };
 
-// Subjects for each department
-const departmentSubjects: Record<string, string[]> = {
-  INFT: ["Mathematics", "DBMS", "Operating Systems", "Computer Networks"],
-  CMPN: ["Mathematics", "Data Structures", "Algorithms", "Software Engineering"],
-  EXCS: ["Mathematics", "Electronics", "Signal Processing", "Control Systems"],
-  EXTC: ["Mathematics", "Analog Circuits", "Communication Engineering", "VLSI"],
-};
+// Color palette for cards
+const subjectColors = [
+  "bg-blue-200",
+  "bg-green-200",
+  "bg-yellow-200",
+  "bg-pink-200",
+  "bg-purple-200",
+  "bg-indigo-200",
+  "bg-red-200",
+];
 
 export default function Attendance() {
-  const role = localStorage.getItem("role") || "student"; // role check
-  const isEditable = role === "staff" || role === "admin";
+  const [department, setDepartment] = useState("INFT");
+  const [subjects, setSubjects] = useState<Subject[]>(
+    departmentSubjects["INFT"].map((name, i) => ({
+      id: i,
+      name,
+      total: 0,
+      present: 0,
+    }))
+  );
 
-  // ✅ Department comes from localStorage (set at login/registration)
-  const storedDept = localStorage.getItem("department") || "INFT";
-  const [department, setDepartment] = useState(storedDept);
-
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-
-  // load subjects when page opens OR department changes
-  useEffect(() => {
+  // Handle department change
+  const handleDepartmentChange = (dept: string) => {
+    setDepartment(dept);
     setSubjects(
-      departmentSubjects[department].map((name, i) => ({
-        id: i + 1,
+      departmentSubjects[dept].map((name, i) => ({
+        id: i,
         name,
         total: 0,
         present: 0,
       }))
     );
-  }, [department]);
-
-  const handleDepartmentChange = (dept: string) => {
-    setDepartment(dept);
-    localStorage.setItem("department", dept); // save for persistence
   };
 
-  const markAttendance = (id: number, status: "present" | "absent") => {
-    if (!isEditable) return; // students can't edit
+  // Handle attendance update
+  const handleAttendanceChange = (id: number, field: "total" | "present", value: number) => {
     setSubjects((prev) =>
-      prev.map((sub) => {
-        if (sub.id === id) {
-          const total = sub.total + 1;
-          const present = status === "present" ? sub.present + 1 : sub.present;
-          return { ...sub, total, present };
-        }
-        return sub;
-      })
+      prev.map((sub) =>
+        sub.id === id ? { ...sub, [field]: Math.max(0, value) } : sub
+      )
     );
   };
 
   return (
-    <div className="pt-20 px-6 min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600">
-      <h1 className="text-3xl font-bold text-white mb-6 text-center"> Attendance Tracker</h1>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">Attendance Manager</h1>
 
-      {/* Department Selector (only staff/admin can change) */}
+      {/* Department Dropdown */}
       <div className="mb-6">
-        <label className="text-white font-medium mr-3">Department:</label>
+        <label className="font-medium">Select Department: </label>
         <select
-          className="p-2 rounded-lg"
           value={department}
           onChange={(e) => handleDepartmentChange(e.target.value)}
-          disabled={role === "student"} // Students can't switch dept
+          className="ml-2 border p-2 rounded"
         >
-          <option value="INFT">INFT</option>
-          <option value="CMPN">CMPN</option>
-          <option value="EXCS">EXCS</option>
-          <option value="EXTC">EXTC</option>
+          {Object.keys(departmentSubjects).map((dept) => (
+            <option key={dept} value={dept}>
+              {dept}
+            </option>
+          ))}
         </select>
       </div>
 
       {/* Subject Cards */}
-      <div className="grid gap-6">
-        {subjects.map((sub) => {
-          const percentage =
-            sub.total > 0 ? Math.round((sub.present / sub.total) * 100) : 0;
-          const belowThreshold = percentage < 75 && sub.total > 0;
-
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {subjects.map((sub, i) => {
+          const percentage = sub.total > 0 ? Math.round((sub.present / sub.total) * 100) : 0;
           return (
             <div
               key={sub.id}
-              className="p-6 bg-white rounded-xl shadow flex flex-col md:flex-row items-center justify-between gap-4"
+              className={`p-4 rounded-xl shadow-md ${subjectColors[i % subjectColors.length]}`}
             >
-              {/* Subject Info */}
-              <div className="flex items-center gap-3">
-  {/* Subject Icon */}
-  <img
-   
-  src={subjectIcons[sub.name] || "/icons/default.png"}
-  alt={sub.name}
-  className="w-10 h-10 object-contain"
-
-    onError={(e) => (e.currentTarget.src = "/icons/default.png")}
-/>
-
-  {/* Subject Info */}
-  <div>
-    <h2 className="text-lg font-semibold">{sub.name}</h2>
-    <p className="text-sm text-gray-600">
-      {sub.present}/{sub.total} classes attended
-    </p>
-  </div>
-</div>
-
-
-              {/* Percentage */}
-              <div
-                className={`font-bold ${
-                  belowThreshold ? "text-red-600" : "text-green-600"
-                }`}
-              >
-                {percentage}%
+              <div className="flex items-center mb-3">
+                <img
+                  src={subjectIcons[sub.name] || "/icons/default.png"}
+                  alt={sub.name}
+                  className="w-10 h-10 object-contain mr-3"
+                  onError={(e) => (e.currentTarget.src = "/icons/default.png")}
+                />
+                <h2 className="text-lg font-semibold">{sub.name}</h2>
               </div>
 
-              {/* Buttons only for Staff/Admin */}
-              {isEditable && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => markAttendance(sub.id, "present")}
-                    className="px-4 py-2 rounded-full bg-green-500 text-white hover:bg-green-600"
-                  >
-                    Present
-                  </button>
-                  <button
-                    onClick={() => markAttendance(sub.id, "absent")}
-                    className="px-4 py-2 rounded-full bg-red-500 text-white hover:bg-red-600"
-                  >
-                    Absent
-                  </button>
-                </div>
-              )}
+              {/* Attendance Inputs */}
+              <div className="flex gap-2 mb-3">
+                <input
+                  type="number"
+                  placeholder="Total"
+                  value={sub.total}
+                  onChange={(e) =>
+                    handleAttendanceChange(sub.id, "total", parseInt(e.target.value) || 0)
+                  }
+                  className="border p-2 w-1/2 rounded"
+                />
+                <input
+                  type="number"
+                  placeholder="Present"
+                  value={sub.present}
+                  onChange={(e) =>
+                    handleAttendanceChange(sub.id, "present", parseInt(e.target.value) || 0)
+                  }
+                  className="border p-2 w-1/2 rounded"
+                />
+              </div>
+
+              {/* Progress Bar */}
+              <div className="w-full bg-gray-300 h-3 rounded">
+                <div
+                  className={`h-3 rounded ${percentage >= 75 ? "bg-green-600" : "bg-red-600"}`}
+                  style={{ width: `${percentage}%` }}
+                ></div>
+              </div>
+              <p className="text-sm mt-1">{percentage}% Attendance</p>
             </div>
           );
         })}
