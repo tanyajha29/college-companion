@@ -6,6 +6,7 @@ import Timetable from "../pages/Timetable";
 import Attendance from "../pages/Attendance";
 import Remainders from "../pages/Remainders";
 import App from "../App";
+import Dashboard from "./pages/Dashboard";
 
 export default function AppRoutes() {
   return (
@@ -17,6 +18,7 @@ export default function AppRoutes() {
       <Route path="/Attendance" element={<Attendance />} />
       <Route path="/Remainders" element={<Remainders />} />
       <Route path="/Home" element={<Home />} />
+      <Route path="/admin" element={<Dashboard />} />
     </Routes>
   );
 }

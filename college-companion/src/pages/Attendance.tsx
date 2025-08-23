@@ -44,6 +44,10 @@ const subjectColors = [
 ];
 
 export default function Attendance() {
+  // 🔑 Role comes from localStorage (set at login/registration)
+  const role = localStorage.getItem("role") || "student"; 
+  const isEditable = role === "staff"; // ✅ only staff can edit
+
   const [department, setDepartment] = useState("INFT");
   const [subjects, setSubjects] = useState<Subject[]>(
     departmentSubjects["INFT"].map((name, i) => ({
@@ -69,6 +73,7 @@ export default function Attendance() {
 
   // Handle attendance update
   const handleAttendanceChange = (id: number, field: "total" | "present", value: number) => {
+    if (!isEditable) return; // 🚫 students/admin cannot edit
     setSubjects((prev) =>
       prev.map((sub) =>
         sub.id === id ? { ...sub, [field]: Math.max(0, value) } : sub
@@ -80,13 +85,14 @@ export default function Attendance() {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Attendance Manager</h1>
 
-      {/* Department Dropdown */}
+      {/* Department Dropdown (staff can switch, students/admin view only) */}
       <div className="mb-6">
         <label className="font-medium">Select Department: </label>
         <select
           value={department}
           onChange={(e) => handleDepartmentChange(e.target.value)}
           className="ml-2 border p-2 rounded"
+          disabled={!isEditable} // 🚫 students & admin can't change department
         >
           {Object.keys(departmentSubjects).map((dept) => (
             <option key={dept} value={dept}>
@@ -115,7 +121,7 @@ export default function Attendance() {
                 <h2 className="text-lg font-semibold">{sub.name}</h2>
               </div>
 
-              {/* Attendance Inputs */}
+              {/* Attendance Inputs (staff can edit, others read-only) */}
               <div className="flex gap-2 mb-3">
                 <input
                   type="number"
@@ -125,6 +131,7 @@ export default function Attendance() {
                     handleAttendanceChange(sub.id, "total", parseInt(e.target.value) || 0)
                   }
                   className="border p-2 w-1/2 rounded"
+                  disabled={!isEditable} // 🚫 students/admin cannot type
                 />
                 <input
                   type="number"
@@ -134,6 +141,7 @@ export default function Attendance() {
                     handleAttendanceChange(sub.id, "present", parseInt(e.target.value) || 0)
                   }
                   className="border p-2 w-1/2 rounded"
+                  disabled={!isEditable} // 🚫 students/admin cannot type
                 />
               </div>
 

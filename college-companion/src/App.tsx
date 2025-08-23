@@ -7,6 +7,7 @@ import Attendance from "./pages/Attendance";
 import Remainders from "./pages/Remainders";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
 
 export default function App() {
   return (
@@ -62,6 +63,8 @@ export default function App() {
         <Route path="/remainders" element={<Remainders />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/admin" element={<Dashboard />} />
+
       </Routes>
     </div>
   );
