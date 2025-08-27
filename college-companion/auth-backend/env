@@ -1,8 +1,0 @@
-PORT=5000
-DB_HOST=localhost
-DB_USER=adminn
-DB_PASSWORD=root
-DB_NAME=college_companion
-JWT_SECRET=super_secret_change_me
-JWT_EXPIRES=1h
-BCRYPT_ROUNDS=10

@@ -1,100 +1,67 @@
-import { Router } from "express";
-import bcrypt from "bcrypt";
+import express from "express";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-import { pool } from "../db.js";
+import { query } from "../db.js";
 
-dotenv.config();
+const router = express.Router();
 
-const router = Router();
-const ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || "10", 10);
-
-// REGISTER  -------------------------------
+// ✅ REGISTER
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, role = "Student", department = null } = req.body;
+    const { username, email, password, role } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "name, email, password are required" });
-    }
-    if (!["Admin", "Staff", "Student"].includes(role)) {
-      return res.status(400).json({ message: "Invalid role" });
-    }
-
-    // Check existing
-    const [existing] = await pool.query("SELECT id FROM users WHERE email = ?", [email]);
-    if (existing.length > 0) {
-      return res.status(409).json({ message: "Email already registered" });
+    // check if user exists
+    const userExists = await query("SELECT * FROM users WHERE email = $1", [email]);
+    if (userExists.rows.length > 0) {
+      return res.status(400).json({ message: "User already exists" });
     }
 
-    const hashed = await bcrypt.hash(password, ROUNDS);
+    // hash password
+    console.log("Register data:", { username, email, password, role });
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const [result] = await pool.query(
-      "INSERT INTO users (name, email, password, role, department) VALUES (?,?,?,?,?)",
-      [name, email, hashed, role, department]
+    // insert user (use username instead of name)
+
+    const newUser = await query(
+      
+      "INSERT INTO users (username, email, password, role) VALUES ($1, $2, $3, $4) RETURNING user_id, username, email, role",
+      [username, email, hashedPassword, role || "student"]
     );
 
-    return res.status(201).json({
-      message: "Registered successfully",
-      user: { id: result.insertId, name, email, role, department }
-    });
+    res.status(201).json({ message: "User registered successfully", user: newUser.rows[0] });
   } catch (err) {
-    console.error("REGISTER ERROR:", err);
-    return res.status(500).json({ message: "Server error" });
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// LOGIN  ---------------------------------
+// ✅ LOGIN
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password)
-      return res.status(400).json({ message: "email and password are required" });
 
-    const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
-    if (rows.length === 0) return res.status(401).json({ message: "Invalid credentials" });
+    // check user
+    const user = await query("SELECT * FROM users WHERE email = $1", [email]);
+    if (user.rows.length === 0) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
-    const user = rows[0];
-    const ok = await bcrypt.compare(password, user.password);
-    if (!ok) return res.status(401).json({ message: "Invalid credentials" });
+    const validPassword = await bcrypt.compare(password, user.rows[0].password);
+    if (!validPassword) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
+    // generate JWT (fix column names)
     const token = jwt.sign(
-      { id: user.id, role: user.role },
+      { id: user.rows[0].user_id, role: user.rows[0].role },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES || "1h" }
+      { expiresIn: "1h" }
     );
 
-    return res.json({
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        department: user.department
-      }
-    });
+    res.json({ message: "Login successful", token });
   } catch (err) {
-    console.error("LOGIN ERROR:", err);
-    return res.status(500).json({ message: "Server error" });
-  }
-});
-
-// ME (optional) ---------------------------
-router.get("/me", async (req, res) => {
-  // Typically you'd require verifyToken here; keeping open for simplicity
-  try {
-    const header = req.headers.authorization || "";
-    const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-    if (!token) return res.status(401).json({ message: "No token provided" });
-
-    const payload = jwt.verify(token, process.env.JWT_SECRET); // {id, role}
-    const [rows] = await pool.query("SELECT id, name, email, role, department FROM users WHERE id = ?", [payload.id]);
-    if (rows.length === 0) return res.status(404).json({ message: "User not found" });
-
-    return res.json({ user: rows[0] });
-  } catch (err) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

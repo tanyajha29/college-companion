@@ -8,19 +8,40 @@ export default function Login() {
   const [role, setRole] = useState("student");
   const [department, setDepartment] = useState("INFT");
   const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr(null);
 
     if (!email.includes("@")) return setErr("Enter a valid email.");
     if (pwd.length < 6) return setErr("Password must be at least 6 characters.");
 
-    // ✅ Save role and department in localStorage
-    localStorage.setItem("role", role);
-    localStorage.setItem("department", department);
+    try {
+      setLoading(true);
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password: pwd }),
+      });
 
-    nav("/Home"); // redirect after login
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      // ✅ Save token + role + dept
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("role", role);
+      localStorage.setItem("department", department);
+
+      nav("/Home"); // redirect after successful login
+    } catch (error: any) {
+      setErr(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -85,14 +106,14 @@ export default function Login() {
             </select>
           </div>
 
-          {/* Department (only staff/admin can change) */}
+          {/* Department */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Department</label>
             <select
               className="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
-              disabled={role === "student"} // Students fixed dept
+              disabled={role === "student"}
             >
               <option value="INFT">INFT</option>
               <option value="CMPN">CMPN</option>
@@ -104,9 +125,10 @@ export default function Login() {
           {/* Button */}
           <button
             type="submit"
+            disabled={loading}
             className="w-full rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 font-medium shadow hover:from-blue-700 hover:to-blue-800 transition"
           >
-            Sign in
+            {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
       </div>
