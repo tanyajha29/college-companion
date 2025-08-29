@@ -1,14 +1,42 @@
 import jwt from "jsonwebtoken";
 
+// ✅ Core middleware: Verify JWT
 export function authMiddleware(req, res, next) {
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1]; // Bearer <token>
 
-  if (!token) return res.status(401).json({ message: "No token provided" });
+  if (!authHeader) {
+    return res.status(401).json({ success: false, error: "AUTH_HEADER_MISSING" });
+  }
+
+  // Ensure proper "Bearer <token>" format
+  const token = authHeader.startsWith("Bearer ")
+    ? authHeader.split(" ")[1]
+    : null;
+
+  if (!token) {
+    return res.status(401).json({ success: false, error: "AUTH_NO_TOKEN" });
+  }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ message: "Invalid token" });
-    req.user = user; // attach decoded token info (id, role) to req
+    if (err) {
+      return res.status(403).json({ success: false, error: "AUTH_INVALID_TOKEN" });
+    }
+    req.user = user; // attach decoded info (id, role) to req
     next();
   });
+}
+
+// ✅ Role-based Access Control (RBAC)
+export function authorizeRoles(...roles) {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: "AUTH_NOT_AUTHENTICATED" });
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ success: false, error: "AUTH_FORBIDDEN" });
+    }
+
+    next();
+  };
 }

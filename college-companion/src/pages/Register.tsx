@@ -3,33 +3,51 @@ import { useNavigate, Link } from "react-router-dom";
 
 export default function Register() {
   const nav = useNavigate();
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
-  const [confirmPwd, setConfirmPwd] = useState("");
   const [role, setRole] = useState("student");
   const [department, setDepartment] = useState("INFT");
   const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr(null);
 
-    if (!name.trim()) return setErr("Name required.");
+    if (username.trim().length < 3) return setErr("Username must be at least 3 characters.");
     if (!email.includes("@")) return setErr("Enter a valid email.");
     if (pwd.length < 6) return setErr("Password must be at least 6 characters.");
-    if (pwd !== confirmPwd) return setErr("Passwords do not match.");
 
-    // ✅ Save role & department
-    localStorage.setItem("role", role);
-    localStorage.setItem("department", department);
+    try {
+      setLoading(true);
 
-    nav("/Home"); // redirect after register
+      const res = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password: pwd, role, department }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Something went wrong");
+      }
+
+      // ✅ Save role and dept in localStorage for later usage
+      localStorage.setItem("role", data.user.role);
+      localStorage.setItem("department", department);
+
+      nav("/login"); // redirect after successful registration
+    } catch (error: any) {
+      setErr(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div
-      className="relative min-h-screen flex items-center justify-center bg-cover bg-center pt-20"
+      className="relative min-h-screen flex items-center justify-center bg-cover bg-center"
       style={{ backgroundImage: "url('/welcome.png')" }}
     >
       <div className="absolute inset-0 bg-blue-900 bg-opacity-60 backdrop-blur-sm"></div>
@@ -46,20 +64,20 @@ export default function Register() {
         </div>
 
         <h2 className="text-2xl font-bold mb-2 text-center text-gray-800">Create Account</h2>
-        <p className="text-sm text-center text-gray-500 mb-6">Fill in your details</p>
+        <p className="text-sm text-center text-gray-500 mb-6">Sign up to get started</p>
 
         {err && <div className="mb-4 text-sm text-red-600">{err}</div>}
 
         <form onSubmit={onSubmit} className="space-y-4">
-          {/* Name */}
+          {/* Username */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Full Name</label>
+            <label className="block text-sm font-medium text-gray-700">Username</label>
             <input
               type="text"
-              className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="John Doe"
+              className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Your username"
             />
           </div>
 
@@ -68,7 +86,7 @@ export default function Register() {
             <label className="block text-sm font-medium text-gray-700">Email</label>
             <input
               type="email"
-              className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@college.edu"
@@ -80,21 +98,9 @@ export default function Register() {
             <label className="block text-sm font-medium text-gray-700">Password</label>
             <input
               type="password"
-              className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={pwd}
               onChange={(e) => setPwd(e.target.value)}
-              placeholder="••••••••"
-            />
-          </div>
-
-          {/* Confirm Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
-            <input
-              type="password"
-              className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
-              value={confirmPwd}
-              onChange={(e) => setConfirmPwd(e.target.value)}
               placeholder="••••••••"
             />
           </div>
@@ -103,7 +109,7 @@ export default function Register() {
           <div>
             <label className="block text-sm font-medium text-gray-700">User Type</label>
             <select
-              className="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={role}
               onChange={(e) => setRole(e.target.value)}
             >
@@ -117,10 +123,10 @@ export default function Register() {
           <div>
             <label className="block text-sm font-medium text-gray-700">Department</label>
             <select
-              className="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
-              disabled={role === "student"} // Students fixed dept
+              disabled={role === "student"}
             >
               <option value="INFT">INFT</option>
               <option value="CMPN">CMPN</option>
@@ -132,9 +138,10 @@ export default function Register() {
           {/* Button */}
           <button
             type="submit"
-            className="w-full rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 font-medium shadow hover:from-blue-700 hover:to-blue-800 transition"
+            disabled={loading}
+            className="w-full rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 font-medium shadow hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-60"
           >
-            Register
+            {loading ? "Registering..." : "Register"}
           </button>
         </form>
       </div>
