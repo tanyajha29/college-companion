@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 
 export default function Register() {
   const nav = useNavigate();
+  const [contact_no, setContact] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
@@ -18,26 +19,35 @@ export default function Register() {
     if (username.trim().length < 3) return setErr("Username must be at least 3 characters.");
     if (!email.includes("@")) return setErr("Enter a valid email.");
     if (pwd.length < 6) return setErr("Password must be at least 6 characters.");
+    if (contact_no.trim().length < 10) return setErr("Enter a valid contact number.");
 
     try {
       setLoading(true);
 
       const res = await fetch("http://localhost:5000/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password: pwd, role, department }),
-      });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    username,
+    email,
+    password: pwd,
+    contact_no,
+    role,
+    ...(role !== "admin" && { department }), // ✅ Only send dept if not admin
+  }),
+});
+
 
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.message || "Something went wrong");
       }
 
-      // ✅ Save role and dept in localStorage for later usage
       localStorage.setItem("role", data.user.role);
       localStorage.setItem("department", department);
+      localStorage.setItem("contact", data.user.contact);
 
-      nav("/login"); // redirect after successful registration
+      nav("/login");
     } catch (error: any) {
       setErr(error.message);
     } finally {
@@ -47,31 +57,44 @@ export default function Register() {
 
   return (
     <div
-      className="relative min-h-screen flex items-center justify-center bg-cover bg-center"
-      style={{ backgroundImage: "url('/welcome.png')" }}
+      className="relative min-h-screen flex items-center justify-center bg-cover bg-center pt-24" 
+      // ✅ Added pt-24 to push card below fixed Navbar
+      style={{ backgroundImage: "url('/login_register_bg.jpeg')" }}
     >
-      <div className="absolute inset-0 bg-blue-900 bg-opacity-60 backdrop-blur-sm"></div>
+      <div className="absolute inset-0 bg-blue-900 bg-opacity-40 backdrop-blur-sm"></div>
 
       <div className="relative w-full max-w-md p-8 rounded-2xl bg-white/90 backdrop-blur-lg shadow-2xl border border-white/40">
         {/* Tabs */}
         <div className="flex justify-center mb-6 border-b">
-          <Link to="/login" className="px-6 py-2 border-b-2 border-transparent text-gray-500 hover:text-blue-600">
+          <Link
+            to="/login"
+            className="px-6 py-2 border-b-2 border-transparent text-gray-500 hover:text-blue-600"
+          >
             Login
           </Link>
-          <Link to="/register" className="px-6 py-2 border-b-2 border-blue-600 text-blue-600 font-semibold">
+          <Link
+            to="/register"
+            className="px-6 py-2 border-b-2 border-blue-600 text-blue-600 font-semibold"
+          >
             Register
           </Link>
         </div>
 
-        <h2 className="text-2xl font-bold mb-2 text-center text-gray-800">Create Account</h2>
-        <p className="text-sm text-center text-gray-500 mb-6">Sign up to get started</p>
+        <h2 className="text-2xl font-bold mb-2 text-center text-gray-800">
+          Create Account
+        </h2>
+        <p className="text-sm text-center text-gray-500 mb-6">
+          Sign up to get started
+        </p>
 
         {err && <div className="mb-4 text-sm text-red-600">{err}</div>}
 
         <form onSubmit={onSubmit} className="space-y-4">
           {/* Username */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Username</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Username
+            </label>
             <input
               type="text"
               className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -83,7 +106,9 @@ export default function Register() {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Email
+            </label>
             <input
               type="email"
               className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -95,7 +120,9 @@ export default function Register() {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Password</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
             <input
               type="password"
               className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -105,9 +132,25 @@ export default function Register() {
             />
           </div>
 
+          {/* Contact Number */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Contact Number
+            </label>
+            <input
+              type="tel"
+              className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={contact_no}
+              onChange={(e) => setContact(e.target.value)}
+              placeholder="+91 9876543210"
+            />
+          </div>
+
           {/* Role */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">User Type</label>
+            <label className="block text-sm font-medium text-gray-700">
+              User Type
+            </label>
             <select
               className="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={role}
@@ -119,21 +162,24 @@ export default function Register() {
             </select>
           </div>
 
-          {/* Department */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Department</label>
-            <select
-              className="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              value={department}
-              onChange={(e) => setDepartment(e.target.value)}
-              disabled={role === "student"}
-            >
-              <option value="INFT">INFT</option>
-              <option value="CMPN">CMPN</option>
-              <option value="EXCS">EXCS</option>
-              <option value="EXTC">EXTC</option>
-            </select>
-          </div>
+       {/* Department */}
+{role !== "admin" && (
+  <div>
+    <label className="block text-sm font-medium text-gray-700">
+      Department
+    </label>
+    <select
+      className="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      value={department}
+      onChange={(e) => setDepartment(e.target.value)}
+    >
+      <option value="INFT">INFT</option>
+      <option value="CMPN">CMPN</option>
+      <option value="EXCS">EXCS</option>
+      <option value="EXTC">EXTC</option>
+    </select>
+  </div>
+)}
 
           {/* Button */}
           <button

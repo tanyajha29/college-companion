@@ -8,6 +8,8 @@ import Remainders from "./pages/Remainders";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import ProfilePage from "./pages/profile"; 
+import InternshipTrackerPage from "./pages/InternshipTracker";
 
 export default function App() {
   return (
@@ -58,12 +60,14 @@ export default function App() {
         />
 
         {/* Other Pages */}
+         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/timetable" element={<Timetable />} />
         <Route path="/attendance" element={<Attendance />} />
         <Route path="/remainders" element={<Remainders />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/admin" element={<Dashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/internship"element={<InternshipTrackerPage/>}/>
 
       </Routes>
     </div>

@@ -46,10 +46,10 @@ export default function Login() {
 
   return (
     <div
-      className="relative min-h-screen flex items-center justify-center bg-cover bg-center"
-      style={{ backgroundImage: "url('/welcome.png')" }}
+      className="relative min-h-screen flex items-center justify-center bg-cover bg-center pt-24"
+      style={{ backgroundImage: "url('/login_register_bg.jpeg')" }}
     >
-      <div className="absolute inset-0 bg-blue-900 bg-opacity-60 backdrop-blur-sm"></div>
+      <div className="absolute inset-0 bg-blue-900 bg-opacity-40 backdrop-blur-sm"></div>
 
       <div className="relative w-full max-w-md p-8 rounded-2xl bg-white/90 backdrop-blur-lg shadow-2xl border border-white/40">
         {/* Tabs */}
@@ -106,21 +106,25 @@ export default function Login() {
             </select>
           </div>
 
-          {/* Department */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Department</label>
-            <select
-              className="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              value={department}
-              onChange={(e) => setDepartment(e.target.value)}
-              disabled={role === "student"}
-            >
-              <option value="INFT">INFT</option>
-              <option value="CMPN">CMPN</option>
-              <option value="EXCS">EXCS</option>
-              <option value="EXTC">EXTC</option>
-            </select>
-          </div>
+         {/* Department */}
+{role !== "admin" && (
+  <div>
+    <label className="block text-sm font-medium text-gray-700">
+      Department
+    </label>
+    <select
+      className="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      value={department}
+      onChange={(e) => setDepartment(e.target.value)}
+    >
+      <option value="INFT">INFT</option>
+      <option value="CMPN">CMPN</option>
+      <option value="EXCS">EXCS</option>
+      <option value="EXTC">EXTC</option>
+    </select>
+  </div>
+)}
+
 
           {/* Button */}
           <button

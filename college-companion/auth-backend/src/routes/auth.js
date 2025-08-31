@@ -9,12 +9,14 @@ const isEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
 // ✅ REGISTER
 router.post("/register", async (req, res) => {
+  console.log("Incoming body:", req.body);
+
   try {
-    const { username, email, password, role = "student" } = req.body;
+    const { username, email, password, role = "student", department, contact_no } = req.body;
 
     // ---- input validation
-    if (!username || !email || !password) {
-      return res.status(400).json({ message: "username, email and password are required" });
+    if (!username || !email || !password || !contact_no) {
+      return res.status(400).json({ message: "username, email, password and contact_no are required" });
     }
     if (!isEmail(email)) {
       return res.status(400).json({ message: "Invalid email format" });
@@ -27,30 +29,50 @@ router.post("/register", async (req, res) => {
     }
 
     // ---- check duplicates
-    const dupe = await query("SELECT 1 FROM users WHERE email=$1 OR username=$2", [email, username]);
+    const dupe = await query(
+      "SELECT 1 FROM users WHERE email=$1 OR username=$2",
+      [email, username]
+    );
     if (dupe.rows.length) {
       return res.status(409).json({ message: "Username or email already exists" });
     }
 
     // ---- hash and insert
     const hashedPassword = await bcrypt.hash(password, 10);
-    const insertSql = `
-      INSERT INTO users (username, email, password, role)
-      VALUES ($1, $2, $3, $4)
-      RETURNING user_id, username, email, role
-    `;
-    const { rows } = await query(insertSql, [username, email, hashedPassword, role]);
 
-    return res.status(201).json({ message: "User registered successfully", user: rows[0] });
+    // 👇 if role = admin → always store ADMIN, else take from request
+    const finalDept = role === "admin" ? null : department || null;
+
+    const insertSql = `
+      INSERT INTO users (username, email, password, role, dept_id, contact_no)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING user_id, username, email, role, dept_id, contact_no
+    `;
+
+    const { rows } = await query(insertSql, [
+      username,
+      email,
+      hashedPassword,
+      role,
+      finalDept,
+      contact_no,
+    ]);
+
+    return res.status(201).json({
+      message: "User registered successfully",
+      user: rows[0],
+    });
   } catch (err) {
     // handle PG unique violation nicely
     if (err?.code === "23505") {
       return res.status(409).json({ message: "Username or email already exists" });
     }
-    console.error("Register error:", err);
+    console.error("Register error:", err.message,err.detail,err.stack);
+
     return res.status(500).json({ message: "Server error" });
   }
 });
+
 
 // ✅ LOGIN
 

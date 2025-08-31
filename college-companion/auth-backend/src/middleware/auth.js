@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
 // ✅ Core middleware: Verify JWT
-export function authMiddleware(req, res, next) {
+export default function authMiddleware(req, res, next) {
   const authHeader = req.headers["authorization"];
 
   if (!authHeader) {
