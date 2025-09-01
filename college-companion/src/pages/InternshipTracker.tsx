@@ -16,12 +16,10 @@ const InternshipTrackerPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen">
-      {/* Background Image with Overlay */}
-      <div className="absolute inset-0">
-        <div className="w-full h-full bg-[url('/auditorium.jpg')] bg-cover bg-center" />
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900/70 to-blue-400/70" />
-      </div>
+    <div className="relative min-h-screen bg-[url('/auditorium.jpg')] bg-center bg-cover bg-no-repeat bg-fixed">
+  {/* Overlay to make content readable */}
+  <div className="absolute inset-0 bg-gradient-to-br from-gray-900/70 to-blue-400/70" />
+
 
       {/* Content */}
       <div className="relative z-10 p-6 max-w-5xl mx-auto pt-24"> 

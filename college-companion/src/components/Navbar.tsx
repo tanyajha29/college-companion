@@ -93,33 +93,15 @@ export default function Navbar() {
     menuOpen ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0"
   } origin-top`}
 >
+                
+                
+                
                 <Link
-                  to="/Exams"
+                  to="/dashboard"
                   className="flex items-center gap-2 px-4 py-2 hover:bg-blue-100"
                   onClick={() => setMenuOpen(false)}
                 >
-                  <BookOpen size={16} /> Exams
-                </Link>
-                <Link
-                  to="/Career"
-                  className="flex items-center gap-2 px-4 py-2 hover:bg-blue-100"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <Briefcase size={16} /> Career
-                </Link>
-                <Link
-                  to="/Staff"
-                  className="flex items-center gap-2 px-4 py-2 hover:bg-blue-100"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <Users size={16} /> Staff Panel
-                </Link>
-                <Link
-                  to="/Admin"
-                  className="flex items-center gap-2 px-4 py-2 hover:bg-blue-100"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <Shield size={16} /> Admin Panel
+                  <Shield size={16} />Dashboard
                 </Link>
                 <Link
                   to="/Login"
@@ -173,33 +155,21 @@ export default function Navbar() {
           >
             <User size={16} className="inline mr-2" /> Profile
           </Link>
+          
           <Link
-            to="/Exams"
+            to="/internship"
             className="block px-6 py-2 hover:bg-blue-100"
             onClick={() => setMobileOpen(false)}
           >
-            <BookOpen size={16} className="inline mr-2" /> Exams
+            <Briefcase size={16} className="inline mr-2" /> Internship Tracker
           </Link>
+          
           <Link
-            to="/Career"
+            to="/dashboard"
             className="block px-6 py-2 hover:bg-blue-100"
             onClick={() => setMobileOpen(false)}
           >
-            <Briefcase size={16} className="inline mr-2" /> Career
-          </Link>
-          <Link
-            to="/Staff"
-            className="block px-6 py-2 hover:bg-blue-100"
-            onClick={() => setMobileOpen(false)}
-          >
-            <Users size={16} className="inline mr-2" /> Staff Panel
-          </Link>
-          <Link
-            to="/Admin"
-            className="block px-6 py-2 hover:bg-blue-100"
-            onClick={() => setMobileOpen(false)}
-          >
-            <Shield size={16} className="inline mr-2" /> Admin Panel
+            <Shield size={16} className="inline mr-2" /> Dashboard
           </Link>
           <Link
             to="/Login"
