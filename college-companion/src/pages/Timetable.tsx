@@ -1,198 +1,247 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-type ClassEntry = {
-  id: number;
-  subject: string;
+type TimetableEntry = {
+  timetable_id: number;
+  user_id: number;
   day: string;
-  start: string;
-  end: string;
-  room?: string;
+  time: string;
+  subject: string;
+  location: string;
 };
 
-const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-const times = Array.from({ length: 10 }, (_, i) => `${8 + i}:00`); // 8AM–6PM
+const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const times = ["09:00:00", "10:00:00", "11:00:00", "12:00:00", "13:00:00", "14:00:00", "15:00:00", "16:00:00"];
 
 export default function Timetable() {
-  const role = localStorage.getItem("role") || "Student"; // default Student
-  const isEditable = role === "Staff" || role === "Admin";
+  const [entries, setEntries] = useState<TimetableEntry[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<TimetableEntry | null>(null);
+  const [form, setForm] = useState({ day: "", time: "", subject: "", location: "" });
 
-  const [entries, setEntries] = useState<ClassEntry[]>([]);
-  const [form, setForm] = useState({
-    subject: "",
-    day: "Monday",
-    start: "08:00",
-    end: "09:00",
-    room: "",
-  });
-  const [error, setError] = useState<string | null>(null);
+  const userId = 1; // 🔑 Replace with logged-in user_id from auth later
 
-  const addClass = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  // ✅ Fetch timetable from backend
+  useEffect(() => {
+  axios
+    .get("http://localhost:5000/api/timetable", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+    })
+    .then((res) => setEntries(res.data))
+    .catch((err) => console.error(err));
+}, []);
 
-    if (!form.subject.trim()) return setError("Subject required.");
-    if (form.start >= form.end)
-      return setError("Start time must be before end time.");
-
-    const overlap = entries.some(
-      (c) =>
-        c.day === form.day &&
-        ((form.start >= c.start && form.start < c.end) ||
-          (form.end > c.start && form.end <= c.end))
+  // ✅ Check for conflicts
+  const hasConflict = (day: string, time: string, id?: number) => {
+    return entries.some(
+      (entry) => 
+        entry.day === day && 
+      entry.time.slice(0,5) === time.slice(0,5) && 
+      entry.timetable_id !== id
     );
-    if (overlap) return setError("Time overlaps with existing class.");
-
-    setEntries([...entries, { id: Date.now(), ...form }]);
-    setForm({
-      subject: "",
-      day: "Monday",
-      start: "08:00",
-      end: "09:00",
-      room: "",
-    });
   };
 
-  const deleteClass = (id: number) => {
-    setEntries(entries.filter((c) => c.id !== id));
+  const openModal = (entry?: TimetableEntry) => {
+    if (entry) {
+      setEditingEntry(entry);
+      setForm({
+        day: entry.day,
+        time: entry.time,
+        subject: entry.subject,
+        location: entry.location || "",
+      });
+    } else {
+      setEditingEntry(null);
+      setForm({ day: "", time: "", subject: "", location: "" });
+    }
+    setShowModal(true);
+  };
+
+  // ✅ Save (Create/Update)
+  const handleSave = async () => {
+    if (!form.day || !form.time || !form.subject) return;
+
+    if (editingEntry) {
+      // Update
+      try {
+        await axios.put(
+  `http://localhost:5000/api/timetable/${editingEntry.timetable_id}`,
+  form,
+  {
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+  }
+);
+
+        setEntries((prev) =>
+          prev.map((e) =>
+            e.timetable_id === editingEntry.timetable_id ? { ...e, ...form } : e
+          )
+        );
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      // Create
+      try {
+        const res = await axios.post("http://localhost:5000/api/timetable", form, {
+  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+});
+
+        setEntries((prev) => [...prev, res.data]); // backend returns created row
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    setShowModal(false);
+  };
+
+  // ✅ Delete
+  const handleDelete = async (id: number) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/timetable/${id}`, {
+  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+});
+
+      setEntries((prev) => prev.filter((e) => e.timetable_id !== id));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 p-24">
-      <h1 className="text-4xl font-bold text-white text-center mb-10 drop-shadow">
-        📅 Weekly Timetable
-      </h1>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Weekly Timetable</h1>
+      <button
+        className="mb-4 px-4 py-2 bg-emerald-600 text-white rounded-lg"
+        onClick={() => openModal()}
+      >
+        + Add Session
+      </button>
 
-      {/* Show form only if Staff/Admin */}
-      {isEditable && (
-        <div className="bg-white p-8 rounded-2xl shadow-lg mb-10 max-w-4xl mx-auto">
-          <h2 className="text-2xl font-semibold text-blue-700 mb-6 text-center">
-            Add a Class
-          </h2>
-          <form
-            onSubmit={addClass}
-            className="grid gap-4 md:grid-cols-5 items-center"
-          >
-            <input
-              placeholder="Subject"
-              className="border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
-              value={form.subject}
-              onChange={(e) => setForm({ ...form, subject: e.target.value })}
-            />
-            <select
-              className="border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
-              value={form.day}
-              onChange={(e) => setForm({ ...form, day: e.target.value })}
-            >
-              {days.map((d) => (
-                <option key={d}>{d}</option>
+      <div className="overflow-x-auto">
+        <table className="border-collapse border border-gray-300 w-full">
+          <thead>
+            <tr>
+              <th className="border border-gray-300 p-2 bg-gray-100">Time</th>
+              {days.map((day) => (
+                <th key={day} className="border border-gray-300 p-2 bg-gray-100">
+                  {day}
+                </th>
               ))}
-            </select>
-            <input
-              type="time"
-              className="border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
-              value={form.start}
-              onChange={(e) => setForm({ ...form, start: e.target.value })}
-            />
-            <input
-              type="time"
-              className="border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
-              value={form.end}
-              onChange={(e) => setForm({ ...form, end: e.target.value })}
-            />
-            <input
-              placeholder="Room"
-              className="border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
-              value={form.room}
-              onChange={(e) => setForm({ ...form, room: e.target.value })}
-            />
-            <button
-              type="submit"
-              className="col-span-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition"
-            >
-              ➕ Add Class
-            </button>
-          </form>
-          {error && (
-            <p className="text-red-600 mt-4 text-center font-medium">{error}</p>
-          )}
+            </tr>
+          </thead>
+          <tbody>
+            {times.map((time) => (
+              <tr key={time}>
+                <td className="border border-gray-300 p-2 bg-gray-50 font-medium">
+                  {time.slice(0, 5)} {/* Show 09:00 instead of 09:00:00 */}
+                </td>
+                {days.map((day) => {
+                  const entry = entries.find((e) => e.day === day && e.time.slice(0,5) === time.slice(0,5));
+                  const conflict = hasConflict(day, time, entry?.timetable_id);
+
+                  return (
+                    <td
+                      key={day + time}
+                      className={`border border-gray-300 p-2 align-top cursor-pointer ${
+                        conflict ? "bg-red-100 border-red-500" : "hover:bg-gray-50"
+                      }`}
+                      onClick={() => openModal(entry || undefined)}
+                    >
+                      {entry ? (
+                        <div>
+                          <div className="font-semibold">{entry.subject}</div>
+                          <div className="text-sm text-gray-600">{entry.location}</div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(entry.timetable_id);
+                            }}
+                            className="text-xs text-red-500 mt-1"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-sm">+</span>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-96">
+            <h2 className="text-lg font-bold mb-4">
+              {editingEntry ? "Edit Session" : "Add Session"}
+            </h2>
+            <div className="space-y-3">
+              <select
+                className="w-full border p-2 rounded"
+                value={form.day}
+                onChange={(e) => setForm({ ...form, day: e.target.value })}
+              >
+                <option value="">Select Day</option>
+                {days.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                className="w-full border p-2 rounded"
+                value={form.time}
+                onChange={(e) => setForm({ ...form, time: e.target.value })}
+              >
+                <option value="">Select Time</option>
+                {times.map((t) => (
+                  <option key={t} value={t}>
+                    {t.slice(0, 5)}
+                  </option>
+                ))}
+              </select>
+
+              <input
+                type="text"
+                placeholder="Subject"
+                className="w-full border p-2 rounded"
+                value={form.subject}
+                onChange={(e) => setForm({ ...form, subject: e.target.value })}
+              />
+
+              <input
+                type="text"
+                placeholder="Location"
+                className="w-full border p-2 rounded"
+                value={form.location}
+                onChange={(e) => setForm({ ...form, location: e.target.value })}
+              />
+
+              <div className="flex justify-end space-x-2 pt-2">
+                <button
+                  className="px-4 py-2 bg-gray-200 rounded"
+                  onClick={() => setShowModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 bg-emerald-600 text-white rounded"
+                  onClick={handleSave}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
-
-      {/* Grid */}
-      <div className="overflow-x-auto">
-        <div
-          className="grid bg-white rounded-2xl shadow-lg overflow-hidden"
-          style={{ gridTemplateColumns: `120px repeat(${days.length}, 1fr)` }}
-        >
-          {/* Header Row */}
-          <div className="border p-3 font-bold text-blue-700 bg-blue-100">
-            Time
-          </div>
-          {days.map((d) => (
-            <div
-              key={d}
-              className="border p-3 font-bold text-center text-blue-700 bg-blue-100"
-            >
-              {d}
-            </div>
-          ))}
-
-          {/* Time slots */}
-          {times.map((t, i) => (
-            <>
-              <div
-                key={t}
-                className={`border p-3 text-sm font-medium ${
-                  i % 2 === 0 ? "bg-gray-50" : "bg-gray-100"
-                }`}
-              >
-                {t}
-              </div>
-              {days.map((d) => (
-                <div
-                  key={d + t}
-                  className={`border relative h-20 ${
-                    i % 2 === 0 ? "bg-gray-50" : "bg-gray-100"
-                  } hover:bg-blue-50 transition`}
-                >
-                  {entries
-                    .filter((c) => c.day === d && c.start === t)
-                    .map((c) => (
-                      <div
-                        key={c.id}
-                        className="absolute inset-1 bg-gradient-to-r from-blue-200 to-blue-300 border-l-4 border-blue-600 p-2 text-xs rounded-lg shadow-md flex justify-between items-start"
-                      >
-                        <div>
-                          <strong className="block text-blue-900">
-                            {c.subject}
-                          </strong>
-                          <div className="text-gray-700 text-xs">
-                            {c.start} - {c.end}
-                          </div>
-                          {c.room && (
-                            <div className="italic text-gray-600 text-xs">
-                              Room {c.room}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Delete button (Staff/Admin only) */}
-                        {isEditable && (
-                          <button
-                            onClick={() => deleteClass(c.id)}
-                            className="text-red-600 hover:text-red-800 text-xs font-bold"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                </div>
-              ))}
-            </>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

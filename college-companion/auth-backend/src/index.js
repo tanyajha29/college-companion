@@ -6,7 +6,7 @@ import adminRoutes from "./routes/admin.js"
 import staffRoutes from "./routes/staff.js";
 import profileRoutes from "./routes/profile.js"
 import cors from "cors";
-
+import timetableRoutes from "./routes/timetable.js"
 dotenv.config();
 
 const app = express();
@@ -30,6 +30,7 @@ app.use("/api/protected", protectedRoutes); // protected routes
 app.use("/api/admin", adminRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/profile",profileRoutes)
+app.use("/api/timetable",timetableRoutes)
 // Server start
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
