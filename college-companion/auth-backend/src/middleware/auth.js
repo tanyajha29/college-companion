@@ -17,11 +17,17 @@ export default function authMiddleware(req, res, next) {
     return res.status(401).json({ success: false, error: "AUTH_NO_TOKEN" });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
       return res.status(403).json({ success: false, error: "AUTH_INVALID_TOKEN" });
     }
-    req.user = user; // attach decoded info (id, role) to req
+
+    // Attach user details from decoded token
+    req.user = {
+      user_id: decoded.user_id || decoded.id, // handle both naming styles
+      role: decoded.role,
+    };
+
     next();
   });
 }

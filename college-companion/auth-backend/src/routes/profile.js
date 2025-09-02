@@ -7,7 +7,7 @@ const router = express.Router();
 // ✅ GET profile
 router.get("/", authMiddleware, async (req, res) => {
   try {
-    const userId = req.user.userId; // from JWT payload
+    const userId = req.user.user_id; // from JWT payload
     const result = await pool.query("SELECT * FROM users WHERE user_id=$1", [userId]);
 
     if (result.rows.length === 0) {
@@ -24,7 +24,7 @@ router.get("/", authMiddleware, async (req, res) => {
 // ✅ UPDATE profile
 router.put("/", authMiddleware, async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user.user_id;
     const { name, email, dept_id, contact_no } = req.body;
 
     const result = await pool.query(

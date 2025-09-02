@@ -28,9 +28,9 @@ export default function Timetable() {
     .get("http://localhost:5000/api/timetable", {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
     })
-    .then((res) => 
+    .then((res) => {
       console.log("✅ Response:", res.data);
-    setEntries(res.data))
+    setEntries(res.data);})
     .catch((err) => console.error(err));
 }, []);
 

@@ -22,6 +22,7 @@ router.get("/", authMiddleware, async (req, res) => {
 router.post("/", authMiddleware, async (req, res) => {
   const { day, time, subject, location } = req.body;
   try {
+    
     const result = await pool.query(
       `INSERT INTO timetable (user_id, day, time, subject, location)
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
