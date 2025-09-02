@@ -23,11 +23,14 @@ export default function Timetable() {
 
   // ✅ Fetch timetable from backend
   useEffect(() => {
+    console.log("Fetching timetable..."); 
   axios
     .get("http://localhost:5000/api/timetable", {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
     })
-    .then((res) => setEntries(res.data))
+    .then((res) => 
+      console.log("✅ Response:", res.data);
+    setEntries(res.data))
     .catch((err) => console.error(err));
 }, []);
 
