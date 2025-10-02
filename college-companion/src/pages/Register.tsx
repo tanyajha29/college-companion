@@ -173,10 +173,10 @@ export default function Register() {
       value={department}
       onChange={(e) => setDepartment(e.target.value)}
     >
-      <option value="INFT">INFT</option>
-      <option value="CMPN">CMPN</option>
-      <option value="EXCS">EXCS</option>
-      <option value="EXTC">EXTC</option>
+      <option value="1">INFT</option>
+      <option value="2">CMPN</option>
+      <option value="3">EXCS</option>
+      <option value="4">EXTC</option>
     </select>
   </div>
 )}
