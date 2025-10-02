@@ -1,0 +1,888 @@
+--
+-- PostgreSQL database dump
+--
+
+\restrict WX4rclWPgvU5qQ9zVs5tgKkthpzHBeL8Zauhrl2Hg0iiAiYvmC5QGRPO2i2FhNt
+
+-- Dumped from database version 18.0
+-- Dumped by pg_dump version 18.0
+
+-- Started on 2025-10-02 23:46:29
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- TOC entry 4 (class 2615 OID 2200)
+-- Name: public; Type: SCHEMA; Schema: -; Owner: pg_database_owner
+--
+
+CREATE SCHEMA public;
+
+
+ALTER SCHEMA public OWNER TO pg_database_owner;
+
+--
+-- TOC entry 5152 (class 0 OID 0)
+-- Dependencies: 4
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: pg_database_owner
+--
+
+COMMENT ON SCHEMA public IS 'standard public schema';
+
+
+--
+-- TOC entry 908 (class 1247 OID 17396)
+-- Name: department_type; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.department_type AS ENUM (
+    'ALL',
+    'INFT',
+    'COMP',
+    'EXTC',
+    'EXCS'
+);
+
+
+ALTER TYPE public.department_type OWNER TO postgres;
+
+--
+-- TOC entry 911 (class 1247 OID 17408)
+-- Name: division_type; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.division_type AS ENUM (
+    'ALL',
+    'A',
+    'B',
+    'C'
+);
+
+
+ALTER TYPE public.division_type OWNER TO postgres;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- TOC entry 238 (class 1259 OID 17358)
+-- Name: applications; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.applications (
+    app_id integer NOT NULL,
+    student_id integer,
+    career_id integer,
+    application_date date NOT NULL,
+    status character varying(20),
+    CONSTRAINT applications_status_check CHECK (((status)::text = ANY ((ARRAY['Applied'::character varying, 'Shortlisted'::character varying, 'Rejected'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.applications OWNER TO postgres;
+
+--
+-- TOC entry 237 (class 1259 OID 17357)
+-- Name: applications_app_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.applications_app_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.applications_app_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5153 (class 0 OID 0)
+-- Dependencies: 237
+-- Name: applications_app_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.applications_app_id_seq OWNED BY public.applications.app_id;
+
+
+--
+-- TOC entry 228 (class 1259 OID 17287)
+-- Name: attendance; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.attendance (
+    attendance_id integer NOT NULL,
+    student_id integer,
+    course_id integer,
+    attendance_date date NOT NULL,
+    status character varying(10),
+    CONSTRAINT attendance_status_check CHECK (((status)::text = ANY ((ARRAY['Present'::character varying, 'Absent'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.attendance OWNER TO postgres;
+
+--
+-- TOC entry 227 (class 1259 OID 17286)
+-- Name: attendance_attendance_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.attendance_attendance_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.attendance_attendance_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5154 (class 0 OID 0)
+-- Dependencies: 227
+-- Name: attendance_attendance_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.attendance_attendance_id_seq OWNED BY public.attendance.attendance_id;
+
+
+--
+-- TOC entry 234 (class 1259 OID 17337)
+-- Name: career; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.career (
+    career_id integer NOT NULL,
+    career_title character varying(100),
+    description text,
+    eligibility text
+);
+
+
+ALTER TABLE public.career OWNER TO postgres;
+
+--
+-- TOC entry 233 (class 1259 OID 17336)
+-- Name: career_career_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.career_career_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.career_career_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5155 (class 0 OID 0)
+-- Dependencies: 233
+-- Name: career_career_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.career_career_id_seq OWNED BY public.career.career_id;
+
+
+--
+-- TOC entry 236 (class 1259 OID 17347)
+-- Name: career_opportunities; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.career_opportunities (
+    career_id integer NOT NULL,
+    title character varying(100) NOT NULL,
+    company character varying(100),
+    location character varying(100),
+    eligibility text
+);
+
+
+ALTER TABLE public.career_opportunities OWNER TO postgres;
+
+--
+-- TOC entry 235 (class 1259 OID 17346)
+-- Name: career_opportunities_career_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.career_opportunities_career_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.career_opportunities_career_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5156 (class 0 OID 0)
+-- Dependencies: 235
+-- Name: career_opportunities_career_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.career_opportunities_career_id_seq OWNED BY public.career_opportunities.career_id;
+
+
+--
+-- TOC entry 240 (class 1259 OID 17378)
+-- Name: careers; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.careers (
+    career_id integer NOT NULL,
+    student_id integer,
+    opportunity character varying(100),
+    status character varying(20)
+);
+
+
+ALTER TABLE public.careers OWNER TO postgres;
+
+--
+-- TOC entry 239 (class 1259 OID 17377)
+-- Name: careers_career_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.careers_career_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.careers_career_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5157 (class 0 OID 0)
+-- Dependencies: 239
+-- Name: careers_career_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.careers_career_id_seq OWNED BY public.careers.career_id;
+
+
+--
+-- TOC entry 226 (class 1259 OID 17273)
+-- Name: courses; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.courses (
+    course_id integer NOT NULL,
+    course_name character varying(100) NOT NULL,
+    dept_id integer
+);
+
+
+ALTER TABLE public.courses OWNER TO postgres;
+
+--
+-- TOC entry 225 (class 1259 OID 17272)
+-- Name: courses_course_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.courses_course_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.courses_course_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5158 (class 0 OID 0)
+-- Dependencies: 225
+-- Name: courses_course_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.courses_course_id_seq OWNED BY public.courses.course_id;
+
+
+--
+-- TOC entry 220 (class 1259 OID 17224)
+-- Name: departments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.departments (
+    dept_id integer NOT NULL,
+    dept_name character varying(100) NOT NULL
+);
+
+
+ALTER TABLE public.departments OWNER TO postgres;
+
+--
+-- TOC entry 219 (class 1259 OID 17223)
+-- Name: departments_dept_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.departments_dept_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.departments_dept_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5159 (class 0 OID 0)
+-- Dependencies: 219
+-- Name: departments_dept_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.departments_dept_id_seq OWNED BY public.departments.dept_id;
+
+
+--
+-- TOC entry 230 (class 1259 OID 17307)
+-- Name: exams; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.exams (
+    exam_id integer NOT NULL,
+    course_id integer,
+    exam_date date NOT NULL,
+    exam_type character varying(20),
+    CONSTRAINT exams_exam_type_check CHECK (((exam_type)::text = ANY ((ARRAY['Midterm'::character varying, 'Final'::character varying, 'Practical'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.exams OWNER TO postgres;
+
+--
+-- TOC entry 229 (class 1259 OID 17306)
+-- Name: exams_exam_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.exams_exam_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.exams_exam_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5160 (class 0 OID 0)
+-- Dependencies: 229
+-- Name: exams_exam_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.exams_exam_id_seq OWNED BY public.exams.exam_id;
+
+
+--
+-- TOC entry 242 (class 1259 OID 17418)
+-- Name: reminders; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.reminders (
+    id integer NOT NULL,
+    title character varying(255) NOT NULL,
+    date date NOT NULL,
+    note text,
+    department public.department_type DEFAULT 'ALL'::public.department_type NOT NULL,
+    division public.division_type DEFAULT 'ALL'::public.division_type NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by character varying(100)
+);
+
+
+ALTER TABLE public.reminders OWNER TO postgres;
+
+--
+-- TOC entry 241 (class 1259 OID 17417)
+-- Name: reminders_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.reminders_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.reminders_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5161 (class 0 OID 0)
+-- Dependencies: 241
+-- Name: reminders_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.reminders_id_seq OWNED BY public.reminders.id;
+
+
+--
+-- TOC entry 224 (class 1259 OID 17253)
+-- Name: students; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.students (
+    student_id integer NOT NULL,
+    user_id integer,
+    name character varying(100) NOT NULL,
+    dept_id integer,
+    year integer,
+    CONSTRAINT students_year_check CHECK (((year >= 1) AND (year <= 4)))
+);
+
+
+ALTER TABLE public.students OWNER TO postgres;
+
+--
+-- TOC entry 223 (class 1259 OID 17252)
+-- Name: students_student_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.students_student_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.students_student_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5162 (class 0 OID 0)
+-- Dependencies: 223
+-- Name: students_student_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.students_student_id_seq OWNED BY public.students.student_id;
+
+
+--
+-- TOC entry 232 (class 1259 OID 17322)
+-- Name: timetable; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.timetable (
+    timetable_id integer NOT NULL,
+    user_id integer,
+    day character varying(20) NOT NULL,
+    "time" time without time zone NOT NULL,
+    subject character varying(100),
+    location character varying(100)
+);
+
+
+ALTER TABLE public.timetable OWNER TO postgres;
+
+--
+-- TOC entry 231 (class 1259 OID 17321)
+-- Name: timetable_timetable_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.timetable_timetable_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.timetable_timetable_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5163 (class 0 OID 0)
+-- Dependencies: 231
+-- Name: timetable_timetable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.timetable_timetable_id_seq OWNED BY public.timetable.timetable_id;
+
+
+--
+-- TOC entry 222 (class 1259 OID 17233)
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.users (
+    user_id integer NOT NULL,
+    username character varying(50) NOT NULL,
+    password character varying(100) NOT NULL,
+    role character varying(20),
+    email character varying(100),
+    contact_no character varying(15),
+    dept_id integer,
+    CONSTRAINT users_role_check CHECK (((role)::text = ANY ((ARRAY['student'::character varying, 'staff'::character varying, 'admin'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.users OWNER TO postgres;
+
+--
+-- TOC entry 221 (class 1259 OID 17232)
+-- Name: users_user_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.users_user_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.users_user_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5164 (class 0 OID 0)
+-- Dependencies: 221
+-- Name: users_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.users_user_id_seq OWNED BY public.users.user_id;
+
+
+--
+-- TOC entry 4926 (class 2604 OID 17361)
+-- Name: applications app_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.applications ALTER COLUMN app_id SET DEFAULT nextval('public.applications_app_id_seq'::regclass);
+
+
+--
+-- TOC entry 4921 (class 2604 OID 17290)
+-- Name: attendance attendance_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.attendance ALTER COLUMN attendance_id SET DEFAULT nextval('public.attendance_attendance_id_seq'::regclass);
+
+
+--
+-- TOC entry 4924 (class 2604 OID 17340)
+-- Name: career career_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.career ALTER COLUMN career_id SET DEFAULT nextval('public.career_career_id_seq'::regclass);
+
+
+--
+-- TOC entry 4925 (class 2604 OID 17350)
+-- Name: career_opportunities career_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.career_opportunities ALTER COLUMN career_id SET DEFAULT nextval('public.career_opportunities_career_id_seq'::regclass);
+
+
+--
+-- TOC entry 4927 (class 2604 OID 17381)
+-- Name: careers career_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.careers ALTER COLUMN career_id SET DEFAULT nextval('public.careers_career_id_seq'::regclass);
+
+
+--
+-- TOC entry 4920 (class 2604 OID 17276)
+-- Name: courses course_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.courses ALTER COLUMN course_id SET DEFAULT nextval('public.courses_course_id_seq'::regclass);
+
+
+--
+-- TOC entry 4917 (class 2604 OID 17227)
+-- Name: departments dept_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.departments ALTER COLUMN dept_id SET DEFAULT nextval('public.departments_dept_id_seq'::regclass);
+
+
+--
+-- TOC entry 4922 (class 2604 OID 17310)
+-- Name: exams exam_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.exams ALTER COLUMN exam_id SET DEFAULT nextval('public.exams_exam_id_seq'::regclass);
+
+
+--
+-- TOC entry 4928 (class 2604 OID 17421)
+-- Name: reminders id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.reminders ALTER COLUMN id SET DEFAULT nextval('public.reminders_id_seq'::regclass);
+
+
+--
+-- TOC entry 4919 (class 2604 OID 17256)
+-- Name: students student_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.students ALTER COLUMN student_id SET DEFAULT nextval('public.students_student_id_seq'::regclass);
+
+
+--
+-- TOC entry 4923 (class 2604 OID 17325)
+-- Name: timetable timetable_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.timetable ALTER COLUMN timetable_id SET DEFAULT nextval('public.timetable_timetable_id_seq'::regclass);
+
+
+--
+-- TOC entry 4918 (class 2604 OID 17236)
+-- Name: users user_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users ALTER COLUMN user_id SET DEFAULT nextval('public.users_user_id_seq'::regclass);
+
+
+--
+-- TOC entry 5142 (class 0 OID 17358)
+-- Dependencies: 238
+-- Data for Name: applications; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
+-- TOC entry 5132 (class 0 OID 17287)
+-- Dependencies: 228
+-- Data for Name: attendance; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
+-- TOC entry 5138 (class 0 OID 17337)
+-- Dependencies: 234
+-- Data for Name: career; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
+-- TOC entry 5140 (class 0 OID 17347)
+-- Dependencies: 236
+-- Data for Name: career_opportunities; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
+-- TOC entry 5144 (class 0 OID 17378)
+-- Dependencies: 240
+-- Data for Name: careers; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
+-- TOC entry 5130 (class 0 OID 17273)
+-- Dependencies: 226
+-- Data for Name: courses; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
+-- TOC entry 5124 (class 0 OID 17224)
+-- Dependencies: 220
+-- Data for Name: departments; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.departments VALUES (1, 'INFT');
+INSERT INTO public.departments VALUES (2, 'COMP');
+INSERT INTO public.departments VALUES (3, 'EXTC');
+INSERT INTO public.departments VALUES (4, 'EXCS');
+
+
+--
+-- TOC entry 5134 (class 0 OID 17307)
+-- Dependencies: 230
+-- Data for Name: exams; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
+-- TOC entry 5146 (class 0 OID 17418)
+-- Dependencies: 242
+-- Data for Name: reminders; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
+-- TOC entry 5128 (class 0 OID 17253)
+-- Dependencies: 224
+-- Data for Name: students; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
+-- TOC entry 5136 (class 0 OID 17322)
+-- Dependencies: 232
+-- Data for Name: timetable; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
+-- TOC entry 5126 (class 0 OID 17233)
+-- Dependencies: 222
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.users VALUES (1, 'Admin123', '$2b$10$aAxJvzSl3GrhGqYx13atn.Fj7AtDHIahJxFb8vpTD69HurLq12Leu', 'admin', 'abc211@gmail.com', '4556677783', NULL);
+INSERT INTO public.users VALUES (2, 'admin21', '$2b$10$Ew2jkKLsfrDEFRBZRXzEHuW9RLB35hRt34GypzqYlLBnVrQQWYErK', 'admin', 'admin211@gmail.com', '9876543278', NULL);
+INSERT INTO public.users VALUES (3, 'Tanya', '$2b$10$phvzdlnDQOlmuIs.Mm5Pae2/uhs1mCjhGO2kJlrXEz7WbVDLaFwUy', 'student', 'tanya29@gmail.com', '9876543210', NULL);
+INSERT INTO public.users VALUES (4, 'Mansi', '$2b$10$gfb09JD9vYJA0xzs5YEuo.vic4HG0tFlvP910rjg9lhcoy72svLla', 'staff', 'mansi21@gmail.com', '9876785465', NULL);
+
+
+--
+-- TOC entry 5165 (class 0 OID 0)
+-- Dependencies: 237
+-- Name: applications_app_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.applications_app_id_seq', 1, false);
+
+
+--
+-- TOC entry 5166 (class 0 OID 0)
+-- Dependencies: 227
+-- Name: attendance_attendance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.attendance_attendance_id_seq', 1, false);
+
+
+--
+-- TOC entry 5167 (class 0 OID 0)
+-- Dependencies: 233
+-- Name: career_career_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.career_career_id_seq', 1, false);
+
+
+--
+-- TOC entry 5168 (class 0 OID 0)
+-- Dependencies: 235
+-- Name: career_opportunities_career_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.career_opportunities_career_id_seq', 1, false);
+
+
+--
+-- TOC entry 5169 (class 0 OID 0)
+-- Dependencies: 239
+-- Name: careers_career_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.careers_career_id_seq', 1, false);
+
+
+--
+-- TOC entry 5170 (class 0 OID 0)
+-- Dependencies: 225
+-- Name: courses_course_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.courses_course_id_seq', 1, false);
+
+
+--
+-- TOC entry 5171 (class 0 OID 0)
+-- Dependencies: 219
+-- Name: departments_dept_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.departments_dept_id_seq', 1, false);
+
+
+--
+-- TOC entry 5172 (class 0 OID 0)
+-- Dependencies: 229
+-- Name: exams_exam_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.exams_exam_id_seq', 1, false);
+
+
+--
+-- TOC entry 5173 (class 0 OID 0)
+-- Dependencies: 241
+-- Name: reminders_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.reminders_id_seq', 1, false);
+
+
+--
+-- TOC entry 5174 (class 0 OID 0)
+-- Dependencies: 223
+-- Name: students_student_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.students_student_id_seq', 1, false);
+
+
+--
+-- TOC entry 5175 (class 0 OID 0)
+-- Dependencies: 231
+-- Name: timetable_timetable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.timetable_timetable_id_seq', 1, false);
+
+
+--
+-- TOC entry 5176 (class 0 OID 0)
+-- Dependencies: 221
+-- Name: users_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.users_user_id_seq', 4, true);
+
+
+-- Completed on 2025-10-02 23:46:29
+
+--
+-- PostgreSQL database dump complete
+--
+
+\unrestrict WX4rclWPgvU5qQ9zVs5tgKkthpzHBeL8Zauhrl2Hg0iiAiYvmC5QGRPO2i2FhNt
+

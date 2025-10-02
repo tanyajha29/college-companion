@@ -24,7 +24,7 @@ export default function App() {
          {/*Other Page*/}
         <Route path="/timetable" element={<Timetable />} />
         <Route path="/attendance" element={<Attendance />} />
-        <Route path="/remainders" element={<Remainders />} />
+        <Route path="/reminders" element={<Remainders />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />

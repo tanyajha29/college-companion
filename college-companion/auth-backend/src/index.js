@@ -6,6 +6,7 @@ import adminRoutes from "./routes/admin.js"
 import staffRoutes from "./routes/staff.js";
 import profileRoutes from "./routes/profile.js"
 import cors from "cors";
+import reminderRoutes from "./routes/reminders.js"
 import timetableRoutes from "./routes/timetable.js"
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/profile",profileRoutes)
 app.use("/api/timetable",timetableRoutes)
+app.use("/api/reminders",reminderRoutes)
 // Server start
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
