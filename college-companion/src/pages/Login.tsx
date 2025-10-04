@@ -36,7 +36,7 @@ export default function Login() {
       localStorage.setItem("role", role);
       localStorage.setItem("department", department);
 
-      nav("/Home"); // redirect after successful login
+      nav("/"); // redirect after successful login
     } catch (error: any) {
       setErr(error.message);
     } finally {

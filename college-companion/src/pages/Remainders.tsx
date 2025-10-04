@@ -214,8 +214,8 @@ export default function ReminderComponent() {
       `}</style>
       
       <header className="max-w-4xl mx-auto mb-10 text-center">
-        <h1 className="text-4xl font-extrabold text-blue-600 dark:text-blue-400 mb-2 transition-colors duration-500">
-          <span className="inline-block animate-pulse mr-2">⏰</span> Academic Reminders
+        <h1 className="text-4xl font-extrabold text-blue-600 dark:text-blue-400 mb-2 transition-colors duration-500 pt-12">
+          <span className="inline-block animate-pulse mr-2 "></span> Academic Reminders
         </h1>
         <p className="text-lg text-gray-600 dark:text-gray-400">
           Viewing reminders for **{user.role.toUpperCase()}** (Dept: **{user.department}**, Div: **{user.division}**)

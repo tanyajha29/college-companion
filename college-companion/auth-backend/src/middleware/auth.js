@@ -24,8 +24,9 @@ export default function authMiddleware(req, res, next) {
 
     // Attach user details from decoded token
     req.user = {
-      user_id: decoded.user_id || decoded.id, // handle both naming styles
+      userId: decoded.userId || decoded.userid|| decoded.id, // handle both naming styles
       role: decoded.role,
+      username: decoded.username,
     };
 
     next();

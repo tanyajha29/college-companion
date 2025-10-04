@@ -97,8 +97,8 @@ export default function Dashboard() {
     return (
         <>
             {/* Contextual Header */}
-            <h1 className="text-3xl font-extrabold text-gray-900 border-b pb-3 mb-6">{title}</h1>
-            <div className="pt-4">
+            <h1 className="text-3xl font-extrabold text-blue-600 dark:text-blue-400 border-b pb-4 mb-6 border-gray-200 dark:border-gray-700 transition-colors duration-500">{title}</h1>
+            <div className="pt-3">
                 {content}
             </div>
         </>
@@ -107,7 +107,8 @@ export default function Dashboard() {
   
   if (isLoading) {
     return (
-        <div className="flex items-center justify-center min-h-screen text-xl text-blue-700">
+        <div className="flex items-center justify-center min-h-screen text-xl text-blue-700 dark:bg-gray-900 dark:text-blue-400 transition-colors duration-500">
+            <p className="animate-bounce">Loading Dashboard...</p>
             Loading Dashboard...
         </div>
     );
@@ -115,26 +116,26 @@ export default function Dashboard() {
   
   if (!role) {
       return (
-          <div className="p-10 text-center text-red-600">
+          <div className="p-10 text-center text-red-600 dark:bg-gray-900 dark:text-red-400 min-h-screen">
               Session expired or not logged in. Please <a href="/login" className="underline">login</a>.
           </div>
       );
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-500">
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-800 p-6 shadow-2xl text-white flex flex-col">
+      <aside className="w-64 bg-gray-800 p-6 shadow-2xl dark:shadow-gray-950/50 text-white flex flex-col transition-colors duration-500">
         
-        {/* 🎯 PROFESSIONAL LOGO/TITLE BLOCK RE-IMPLEMENTED */}
-        <div className="mb-8 pt-2 pb-6 border-b border-gray-700">
+        {/*  PROFESSIONAL LOGO/TITLE BLOCK RE-IMPLEMENTED */}
+        <div className="mb-8 pt-2 pb-6 border-b border-gray-700 dark-border-gray-800">
             <div className="flex items-center gap-3 pt-10">
-                <GraduationCap size={32} className="text-blue-400" />
-                <h2 className="text-2xl font-bold text-white ">
+                <GraduationCap size={32} className="text-blue-400 animate-pulse" />
+                <h2 className="text-2xl font-bold text-white dark:text-gray-50">
                     College Portal
                 </h2>
             </div>
-            <p className="text-xs text-gray-400 mt-2 ml-10">{capitalize(role)} Panel</p>
+            <p className="text-xs text-blue-300 mt-2 ml-10 font-medium">{capitalize(role)} Panel</p>
         </div>
         {/* END LOGO/TITLE BLOCK */}
 
@@ -147,14 +148,14 @@ export default function Dashboard() {
               return (
                 <button
                   key={item.id}
-                  className={`flex items-center gap-3 p-3 rounded-xl transition duration-200 ease-in-out ${
+                  className={`flex items-center gap-3 p-3 rounded-xl transition duration-200 ease-in-out text-base ${
                     isActive 
                       ? "bg-blue-600 font-semibold shadow-lg shadow-blue-500/50" 
-                      : "hover:bg-gray-700 text-gray-300"
+                      : "hover:bg-gray-700 text-gray-300 dark:text-gray-300 hover:text-white"
                   }`}
                   onClick={() => setActiveSection(item.id)}
                 >
-                  <Icon size={20} /> 
+                  <Icon size={20} className={isActive?'text-white':'text-blue-400 dark:text-blue-300'} /> 
                   {item.label}
                 </button>
               );
@@ -164,26 +165,27 @@ export default function Dashboard() {
         </nav>
 
         {/* Logout Button (Fixed at bottom) */}
-        <button 
-          onClick={handleLogout}
-          className="flex items-center gap-3 p-3 rounded-xl transition duration-200 ease-in-out bg-red-600 hover:bg-red-700 text-white font-semibold mt-auto shadow-md"
-        >
-          <LogOut size={20} /> Logout
-        </button>
-      </aside>
+        <button 
+          onClick={handleLogout}
+          className="flex items-center justify-center gap-3 p-3 rounded-xl transition duration-200 ease-in-out bg-red-600 hover:bg-red-700 text-white font-semibold mt-auto shadow-lg hover:shadow-xl"
+        >
+          <LogOut size={20} /> Logout
+        </button>
+      </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 p-8">
-        <motion.div
-          key={activeSection}
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="bg-white p-8 rounded-2xl shadow-xl h-full border border-gray-200"
-        >
-          {renderSectionContent()}
-        </motion.div>
-      </main>
-    </div>
-  );
+      {/* Main Content Area */}
+      <main className="flex-1 p-8 overflow-y-auto">
+        <motion.div
+          key={activeSection}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          
+          className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl dark:shadow-gray-950/70 h-full border border-gray-100 dark:border-gray-700 text-gray-900 dark:text-white transition-colors duration-500"
+>
+          {renderSectionContent()}
+        </motion.div>
+      </main>
+    </div>
+  );
 }
