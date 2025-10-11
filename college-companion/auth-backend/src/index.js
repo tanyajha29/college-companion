@@ -8,6 +8,8 @@ import profileRoutes from "./routes/profile.js"
 import cors from "cors";
 import reminderRoutes from "./routes/reminders.js"
 import timetableRoutes from "./routes/timetable.js"
+import attendanceRoutes from "./routes/attendance.js"
+console.log("Is attendanceRoutes defined?", attendanceRoutes ? 'Yes, it is an object.' : 'No, it is UNDEFINED.');
 dotenv.config();
 
 const app = express();
@@ -18,6 +20,10 @@ app.use(cors({
   credentials: true,
 }));
 
+app.use((req, res, next) => {
+    console.log(`[INCOMING REQUEST]: ${req.method} ${req.originalUrl}`);
+    next();
+});
 app.use(express.json());
 
 // Root route
@@ -26,6 +32,7 @@ app.get("/", (req, res) => {
 });
 
 // Routes
+
 app.use("/api/auth", authRoutes);        // auth routes (login, register)
 app.use("/api/protected", protectedRoutes); // protected routes
 app.use("/api/admin", adminRoutes);
@@ -33,6 +40,7 @@ app.use("/api/staff", staffRoutes);
 app.use("/api/profile",profileRoutes)
 app.use("/api/timetable",timetableRoutes)
 app.use("/api/reminders",reminderRoutes)
+app.use("/api/attendance",attendanceRoutes)
 // Server start
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

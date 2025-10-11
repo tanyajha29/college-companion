@@ -4,28 +4,21 @@ import jwt from "jsonwebtoken";
 export default function authMiddleware(req, res, next) {
   const authHeader = req.headers["authorization"];
 
-  if (!authHeader) {
-    return res.status(401).json({ success: false, error: "AUTH_HEADER_MISSING" });
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ success: false, error: "AUTH_HEADER_MISSING_OR_INVALID" });
   }
 
-  // Ensure proper "Bearer <token>" format
-  const token = authHeader.startsWith("Bearer ")
-    ? authHeader.split(" ")[1]
-    : null;
-
-  if (!token) {
-    return res.status(401).json({ success: false, error: "AUTH_NO_TOKEN" });
-  }
+  const token = authHeader.split(" ")[1];
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
       return res.status(403).json({ success: false, error: "AUTH_INVALID_TOKEN" });
     }
 
-    // Attach user details from decoded token
     req.user = {
-      userId: decoded.userId || decoded.userid|| decoded.id, // handle both naming styles
-      role: decoded.role,
+      userId: decoded.userId || decoded.userid,
+      // ✅ FIX: Ensure role is always lowercase for consistent checks.
+      role: decoded.role ? decoded.role.toLowerCase() : undefined,
       username: decoded.username,
     };
 
@@ -36,12 +29,13 @@ export default function authMiddleware(req, res, next) {
 // ✅ Role-based Access Control (RBAC)
 export function authorizeRoles(...roles) {
   return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ success: false, error: "AUTH_NOT_AUTHENTICATED" });
+    if (!req.user || !req.user.role) {
+      return res.status(403).json({ success: false, error: "AUTH_FORBIDDEN_NO_ROLE" });
     }
-
+    
+    // The role check is now case-insensitive because of the fix above.
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ success: false, error: "AUTH_FORBIDDEN" });
+      return res.status(403).json({ success: false, error: "AUTH_FORBIDDEN_INSUFFICIENT_PERMISSIONS" });
     }
 
     next();

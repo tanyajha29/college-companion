@@ -128,7 +128,7 @@ export default function Navbar() {
       {mobileOpen && (
         <div className="md:hidden bg-white text-blue-900 shadow-lg">
           <Link
-            to="/Timetable"
+            to="/timetable"
             className="block px-6 py-2 hover:bg-blue-100"
             onClick={() => setMobileOpen(false)}
           >

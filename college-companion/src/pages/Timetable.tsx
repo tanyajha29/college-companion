@@ -1,425 +1,287 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Clock, CalendarDays, Plus, Trash2, Edit, X, Save, AlertTriangle, ChevronDown } from "lucide-react";
+import { CalendarDays, Plus, Trash2, Edit, X, Save } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type TimetableEntry = {
-  timetable_id: number;
-  user_id: number;
-  day: string;
-  time: string;
-  subject: string;
-  location: string;
+    timetable_id: number;
+    day: string;
+    starttime: string;
+    endtime: string;
+    subject: string;
+    roomno: string;
+    facultyid: number;
+    division: string;
+    courseid: number;
 };
 
-// --- CONSTANTS ---
+const departmentCourses: Record<string, { id: number; name: string }[]> = {
+    INFT: [{ id: 101, name: "Mathematics" }, { id: 102, name: "DBMS" }, { id: 103, name: "Operating Systems" }, { id: 104, name: "Computer Networks" },],
+    COMP: [{ id: 201, name: "Data Structures" }, { id: 202, name: "Algorithms" }, { id: 203, name: "Software Engg" },],
+    EXTC: [{ id: 301, name: "Signal Processing" }, { id: 302, name: "Control Systems" }, { id: 303, name: "Analog Circuits" },],
+    EXCS: [{ id: 401, name: "VLSI" }, { id: 402, name: "Communication Engg" },],
+};
+const divisions = ["A", "B", "C"];
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const times = ["09:00:00", "10:00:00", "11:00:00", "12:00:00", "13:00:00", "14:00:00", "15:00:00", "16:00:00"];
+const times = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"];
 
 export default function Timetable() {
-  const [entries, setEntries] = useState<TimetableEntry[]>([]);
-  const [showModal, setShowModal] = useState(false);
-  const [editingEntry, setEditingEntry] = useState<TimetableEntry | null>(null);
-  const [form, setForm] = useState({ day: "", time: "", subject: "", location: "" });
-  const [selectedDay, setSelectedDay] = useState(days[0]);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // 🔑 NEW: Role and Filter States
-  const [role, setRole] = useState<'admin' | 'staff' | 'student' | null>(null);
-  const [filters, setFilters] = useState({ department: "INFT", division: "A" });
+    const [entries, setEntries] = useState<TimetableEntry[]>([]);
+    const [showModal, setShowModal] = useState(false);
+    const [editingEntry, setEditingEntry] = useState<TimetableEntry | null>(null);
+    const [selectedDepartment, setSelectedDepartment] = useState("INFT");
 
-  // Access Control Checks
-  const isAdminOrStaff = role === 'admin' || role === 'staff';
-  const canEdit = isAdminOrStaff; // Only Admin/Staff can add/edit/delete
+    const [form, setForm] = useState({
+        day: days[0], // Default to Monday
+        starttime: times[0],
+        endtime: times[1],
+        roomno: "",
+        courseid: 0,
+        facultyid: 0,
+        division: divisions[0],
+    });
 
-  const userId = 1; // 🔑 Replace with logged-in user_id from auth later
+    const [isLoading, setIsLoading] = useState(true);
+    const [role, setRole] = useState<'admin' | 'staff' | 'student' | null>(null);
 
-  // 1. Initial Load and Role Check
-  useEffect(() => {
-    const storedRole = localStorage.getItem("role") as 'admin' | 'staff' | 'student' | null;
-    setRole(storedRole);
+    const canEdit = role === 'admin' || role === 'staff';
 
-    const fetchData = () => {
-        console.log("Fetching timetable..."); 
+    const fetchData = async () => {
         setIsLoading(true);
-        axios
-        .get("http://localhost:5000/api/timetable", {
-          // You might adjust the API call here later to pass department/division filters
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        })
-        .then((res) => {
-          console.log("✅ Response:", res.data);
-          setEntries(res.data);
-          setIsLoading(false);
-          
-          const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-          if(days.includes(currentDay)) {
-              setSelectedDay(currentDay);
-          }
-        })
-        .catch((err) => {
-            console.error(err);
+        try {
+            const token = localStorage.getItem("token");
+            const [entriesRes] = await Promise.all([
+                axios.get("/api/timetable", { headers: { Authorization: `Bearer ${token}` } }),
+            ]);
+            setEntries(entriesRes.data);
+        } catch (err) {
+            console.error("Failed to fetch data:", err);
+        } finally {
             setIsLoading(false);
-        });
+        }
     };
-    if (storedRole) {
-      fetchData();
-    } else {
-      setIsLoading(false);
-    }
-  }, []);
-  // NOTE: If you implement filtering on the backend, you would add filters to the dependency array.
 
-  // The rest of the logic remains unchanged:
-  const hasConflict = (day: string, time: string, id?: number) => {
-    return entries.some(
-      (entry) => 
-        entry.day === day && 
-      entry.time.slice(0,5) === time.slice(0,5) && 
-      entry.timetable_id !== id
-    );
-  };
+    useEffect(() => {
+        const storedRole = localStorage.getItem("role");
+        const cleanRole = storedRole ? storedRole.toLowerCase().trim() : null;
+        setRole(cleanRole as 'admin' | 'staff' | 'student' | null);
 
-  const openModal = (entry?: TimetableEntry) => {
-    if (!canEdit && entry) return; // Prevent student from opening edit modal
-    if (!canEdit && !entry) return; // Prevent student from opening add modal
+        if (cleanRole) {
+            fetchData();
+        } else {
+            setIsLoading(false);
+        }
+    }, []);
 
-    if (entry) {
-      setEditingEntry(entry);
-      setForm({
-        day: entry.day,
-        time: entry.time,
-        subject: entry.subject,
-        location: entry.location || "",
-      });
-    } else {
-      setEditingEntry(null);
-      setForm({ day: selectedDay, time: times[0], subject: "", location: "" });
-    }
-    setShowModal(true);
-  };
+    const openModal = (entry?: TimetableEntry) => {
+        if (!canEdit) return;
+        if (entry) {
+            const department = Object.keys(departmentCourses).find(dept =>
+                departmentCourses[dept].some(course => course.id === entry.courseid)
+            ) || "INFT";
+            setSelectedDepartment(department);
+            setEditingEntry(entry);
+            setForm({
+                day: entry.day,
+                starttime: entry.starttime,
+                endtime: entry.endtime,
+                roomno: entry.roomno,
+                courseid: entry.courseid,
+                facultyid: entry.facultyid,
+                division: entry.division,
+            });
+        } else {
+            const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+            setEditingEntry(null);
+            setForm({
+                day: days.includes(currentDay) ? currentDay : days[0],
+                starttime: times[0],
+                endtime: times[1],
+                roomno: "",
+                courseid: departmentCourses[selectedDepartment][0]?.id || 0,
+                facultyid: 0,
+                division: divisions[0],
+            });
+        }
+        setShowModal(true);
+    };
 
-  const handleSave = async () => {
-    if (!form.day || !form.time || !form.subject) return;
+    const handleSave = async () => {
+        if (!form.day || !form.starttime || !form.endtime || !form.roomno || !form.division || form.courseid <= 0 || form.facultyid <= 0) {
+            alert("Please fill all required fields, including valid IDs.");
+            return;
+        }
 
-    if (hasConflict(form.day, form.time, editingEntry?.timetable_id)) {
-        alert("Conflict: A session already exists at this time slot.");
-        return;
-    }
+        const payload = {
+            dayofweek: form.day,
+            starttime: `${form.starttime}:00`,
+            endtime: `${form.endtime}:00`,
+            roomno: form.roomno,
+            courseid: Number(form.courseid),
+            facultyid: Number(form.facultyid),
+            div: form.division,
+        };
 
-    if (editingEntry) {
-      try {
-        await axios.put(
-          `http://localhost:5000/api/timetable/${editingEntry.timetable_id}`,
-          form,
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-          }
-        );
+        try {
+            const token = localStorage.getItem("token");
+            if (editingEntry) {
+                await axios.put(`/api/timetable/${editingEntry.timetable_id}`, payload, { headers: { Authorization: `Bearer ${token}` } });
+            } else {
+                await axios.post("/api/timetable", payload, { headers: { Authorization: `Bearer ${token}` } });
+            }
+            setShowModal(false);
+            await fetchData();
+        } catch (err) {
+            console.error("Failed to save session:", err);
+            alert("An error occurred while saving.");
+        }
+    };
 
-        setEntries((prev) =>
-          prev.map((e) =>
-            e.timetable_id === editingEntry.timetable_id ? { ...e, ...form } : e
-          )
-        );
-      } catch (err) {
-        console.error(err);
-      }
-    } else {
-      try {
-        const res = await axios.post("http://localhost:5000/api/timetable", {...form, user_id: userId}, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        });
+    const handleDelete = async (id: number) => {
+        if (!canEdit || !window.confirm("Are you sure?")) return;
+        try {
+            await axios.delete(`/api/timetable/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
+            setEntries(prev => prev.filter(e => e.timetable_id !== id));
+        } catch (err) {
+            console.error("Failed to delete session:", err);
+        }
+    };
 
-        setEntries((prev) => [...prev, res.data]);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    setShowModal(false);
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!canEdit) return; // Prevent non-authorized deletion
-    if(!window.confirm("Are you sure you want to delete this session?")) return;
-    try {
-      await axios.delete(`http://localhost:5000/api/timetable/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-
-      setEntries((prev) => prev.filter((e) => e.timetable_id !== id));
-    } catch (err) {
-      console.error(err);
-    }
-  };
-    
-  // Function to render the session slot content (Modified for RBAC)
-  const renderSessionSlot = (day: string, time: string) => {
-    const entry = entries.find((e) => e.day === day && e.time.slice(0,5) === time.slice(0,5));
-    const conflict = hasConflict(day, time, entry?.timetable_id);
-
-    const baseClasses = "rounded-lg p-3 h-full w-full flex flex-col justify-center items-center text-center transition duration-200 ease-in-out";
-    
-    // Only Admin/Staff can interact with empty slots
-    const emptyClasses = canEdit 
-        ? "border-2 border-dashed border-gray-300 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
-        : "border-2 border-dashed border-gray-100 dark:border-gray-800 cursor-default";
-
-    const sessionClasses = `bg-white dark:bg-gray-700 shadow-md hover:shadow-lg border border-transparent 
-        ${canEdit ? "hover:border-blue-500 cursor-pointer" : "cursor-default"}
-        ${conflict && canEdit ? "border-red-500 ring-2 ring-red-300" : ""}`;
-
-    if (entry) {
+    const renderSessionSlot = (day: string, time: string) => {
+        const entry = entries.find(e => e.day === day && e.starttime === time);
+        if (!entry) return null;
         return (
-            <motion.div 
-                key={entry.timetable_id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={canEdit ? { scale: 1.02 } : {}} // Hover effect only for Admin/Staff
-                className={`${baseClasses} ${sessionClasses}`}
-                onClick={() => canEdit ? openModal(entry) : null} // Allow edit only if Admin/Staff
-            >
-                <div className="font-extrabold text-blue-600 dark:text-blue-400 text-lg leading-tight">
-                    {entry.subject}
-                </div>
-                <div className="text-sm text-gray-700 dark:text-gray-300 mt-1">
-                    <span className="font-semibold">{entry.location}</span>
-                </div>
-                {conflict && canEdit && ( // Only show conflict warning to staff/admin
-                    <div className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                        <AlertTriangle size={12}/> CONFLICT
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg text-center h-full flex flex-col justify-center">
+                <p className="font-bold text-blue-800 dark:text-blue-300 text-sm">{entry.subject}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">{entry.roomno}</p>
+                {canEdit && (
+                    <div className="flex justify-center gap-2 mt-1">
+                        <Edit size={14} className="cursor-pointer hover:text-green-500" onClick={() => openModal(entry)} />
+                        <Trash2 size={14} className="cursor-pointer hover:text-red-500" onClick={() => handleDelete(entry.timetable_id)} />
                     </div>
                 )}
-                {/* Delete button (only visible and functional for Admin/Staff) */}
-                {canEdit && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(entry.timetable_id);
-                  }}
-                  className="text-red-500 hover:text-red-700 dark:hover:text-red-400 mt-2 p-1 rounded-full hover:bg-red-50/50 transition"
-                >
-                  <Trash2 size={16} />
-                </button>
-                )}
-            </motion.div>
+            </div>
         );
+    };
+
+    if (!role) {
+        return <div className="p-10 text-center">Please log in to view the timetable.</div>;
     }
 
-    // Empty slot (clickable only if Admin/Staff)
     return (
-        <motion.div 
-            className={`${baseClasses} ${emptyClasses}`} 
-            onClick={() => canEdit ? openModal() : null}
-            whileHover={canEdit ? { scale: 1.02 } : {}}
-        >
-            {canEdit ? (
-                <Plus size={20} className="text-gray-500 dark:text-gray-400" />
-            ) : (
-                <span className="text-gray-400 text-sm">-</span>
-            )}
-        </motion.div>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white p-6 sm:p-10">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-bold flex items-center gap-2 pt-12"><CalendarDays /> Timetable</h1>
+                {canEdit && (
+                    <button onClick={() => openModal()} className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 hover:bg-blue-700 transition">
+                        <Plus size={20} /> Add Session
+                    </button>
+                )}
+            </div>
+
+            <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow">
+                <table className="w-full border-collapse">
+                    <thead>
+                        <tr className="bg-gray-100 dark:bg-gray-700">
+                            <th className="p-2 border-b dark:border-gray-600 w-24 text-sm font-medium">Time</th>
+                            {days.map(day => <th key={day} className="p-2 border-b dark:border-gray-600 text-sm font-medium">{day}</th>)}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {isLoading ? (
+                            <tr><td colSpan={days.length + 1} className="text-center p-10">Loading...</td></tr>
+                        ) : entries.length === 0 ? (
+                            <tr>
+                                <td colSpan={days.length + 1} className="text-center p-10 text-gray-500">
+                                    No sessions found. Click "Add Session" to get started.
+                                </td>
+                            </tr>
+                        ) : (
+                            times.map(time => (
+                                <tr key={time} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                    <td className="p-2 border-t dark:border-gray-600 font-mono text-center text-xs">{time}</td>
+                                    {days.map(day => (
+                                        <td key={day} className="p-1 border dark:border-gray-700 h-24 w-40 align-top">
+                                            {renderSessionSlot(day, time)}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            <AnimatePresence>
+                {showModal && canEdit && (
+                    <motion.div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                        <motion.div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border dark:border-gray-700" initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}>
+                            <h2 className="text-2xl font-extrabold text-blue-600 dark:text-blue-400 mb-6 flex items-center gap-2">
+                                {editingEntry ? <Edit size={24} /> : <Plus size={24} />}
+                                {editingEntry ? "Edit Session" : "Add New Session"}
+                            </h2>
+
+                            <div className="space-y-4">
+                                
+                                {/* ✅ FIX: Day of Week Dropdown */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Day</label>
+                                    <select value={form.day} onChange={e => setForm({ ...form, day: e.target.value })} className="w-full border-0 rounded-lg p-3 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500">
+                                        {days.map(day => <option key={day} value={day}>{day}</option>)}
+                                    </select>
+                                </div>
+
+                                {/* ✅ FIX: Start Time and End Time Dropdowns */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-400 mb-1">Start Time</label>
+                                        <select value={form.starttime} onChange={e => setForm({ ...form, starttime: e.target.value })} className="w-full border-0 rounded-lg p-3 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500">
+                                            {times.map(time => <option key={time} value={time}>{time}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-400 mb-1">End Time</label>
+                                        <select value={form.endtime} onChange={e => setForm({ ...form, endtime: e.target.value })} className="w-full border-0 rounded-lg p-3 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500">
+                                            {times.map(time => <option key={time} value={time}>{time}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                {/* Department Dropdown */}
+                                <select value={selectedDepartment} onChange={e => setSelectedDepartment(e.target.value)} className="w-full border-0 rounded-lg p-3 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500">
+                                    {Object.keys(departmentCourses).map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                                </select>
+
+                                {/* Dynamic Subject Dropdown */}
+                                <select value={form.courseid} onChange={e => setForm({ ...form, courseid: parseInt(e.target.value) || 0 })} className="w-full border-0 rounded-lg p-3 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500">
+                                    <option value={0} disabled>Select Subject</option>
+                                    {departmentCourses[selectedDepartment].map(course => <option key={course.id} value={course.id}>{course.name}</option>)}
+                                </select>
+
+                                {/* Division Dropdown */}
+                                <select value={form.division} onChange={e => setForm({ ...form, division: e.target.value })} className="w-full border-0 rounded-lg p-3 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500">
+                                    {divisions.map(div => <option key={div} value={div}>Division {div}</option>)}
+                                </select>
+
+                                {/* Room No Input */}
+                                <input type="text" placeholder="Room No (e.g., L-101)" value={form.roomno} onChange={e => setForm({ ...form, roomno: e.target.value })} className="w-full border-0 rounded-lg p-3 bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500" />
+
+                                {/* Faculty ID Input */}
+                                <input type="number" placeholder="Faculty ID" value={form.facultyid || ''} onChange={e => setForm({ ...form, facultyid: parseInt(e.target.value) || 0 })} className="w-full border-0 rounded-lg p-3 bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500" />
+                            </div>
+
+                            <div className="flex justify-end space-x-3 pt-6">
+                                <button onClick={() => setShowModal(false)} className="px-5 py-3 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-xl font-semibold hover:bg-gray-300 dark:hover:bg-gray-500 transition flex items-center gap-2">
+                                    <X size={20} /> Cancel
+                                </button>
+                                <button onClick={handleSave} className="px-5 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition shadow-md hover:shadow-lg flex items-center gap-2">
+                                    <Save size={20} /> Save Changes
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
     );
-  };
-  
-  // Handle unauthorized/loading states outside the main return
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-10">
-        <Clock size={32} className="text-blue-500 animate-spin mb-4" />
-        <p className="text-xl text-gray-600 dark:text-gray-400 ml-4">Loading your timetable...</p>
-      </div>
-    );
-  }
-
-  if (!role) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-10 text-red-600 dark:text-red-400">
-        Authentication Error: Please log in to view the timetable.
-      </div>
-    );
-  }
-
-
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-500 p-6 sm:p-10">
-      
-      <header className="max-w-7xl mx-auto mb-8">
-        {/* Centered Heading */}
-        <h1 className="justify-center text-4xl font-extrabold text-blue-600 dark:text-blue-400 mb-2 transition-colors duration-500 flex items-center gap-3 pt-12 ">
-          <CalendarDays size={38} /> Weekly Timetable
-        </h1>
-        
-       
-          <p className="text-center text-lg text-gray-600 dark:text-gray-400">
-            {canEdit ? "Manage your class schedule. Click on a slot to add or edit." : "View your current class schedule."}
-          </p>
-          
-<div className="flex justify-between items-center mt-4 flex-wrap gap-4">
-        
-          {/* 🎯 NEW: Department/Division Filters (Admin/Staff only) */}
-          {isAdminOrStaff && (
-            <div className="flex items-center space-x-3 bg-white dark:bg-gray-800 p-3 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Viewing:</span>
-              
-              <select
-                className="border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
-                value={filters.department}
-                onChange={(e) => setFilters({ ...filters, department: e.target.value })}
-              >
-                <option value="INFT">INFT</option>
-                <option value="COMP">COMP</option>
-              </select>
-              
-              <select
-                className="border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
-                value={filters.division}
-                onChange={(e) => setFilters({ ...filters, division: e.target.value })}
-              >
-                <option value="A">Division A</option>
-                <option value="B">Division B</option>
-              </select>
-            </div>
-          )}
-        </div>
-
-        {/* Add New Session Button (Admin/Staff only) */}
-        {canEdit && (
-          <button
-            className="mt-4 px-5 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition duration-200 shadow-md flex items-center gap-2"
-            onClick={() => openModal()}
-          >
-            <Plus size={20} /> Add New Session
-          </button>
-        )}
-      </header>
-
-      <div className="overflow-x-auto max-w-7xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 md:p-6">
-        
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="p-3 text-left w-1/12 text-sm font-bold text-gray-500 dark:text-gray-300 border-b dark:border-gray-700">
-                Time
-              </th>
-              {days.map((day) => (
-                <th 
-                    key={day} 
-                    className={`p-3 text-center text-sm font-bold border-b dark:border-gray-700 
-                        ${day === selectedDay ? "text-blue-600 dark:text-blue-400 bg-gray-50 dark:bg-gray-700/50 rounded-t-lg" : "text-gray-500 dark:text-gray-300"}`
-                    }
-                    onClick={() => setSelectedDay(day)}
-                >
-                  {day}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {times.map((time) => (
-              <tr key={time} className="h-20">
-                <td className="p-2 border-r dark:border-gray-700 text-sm font-extrabold text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/50 rounded-l-lg">
-                  {time.slice(0, 5)}
-                </td>
-                {days.map((day) => {
-                  return (
-                    <td
-                      key={day + time}
-                      className="p-1 h-full align-middle transition duration-150"
-                    >
-                      {renderSessionSlot(day, time)}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Modal (Unchanged) */}
-      <AnimatePresence>
-        {showModal && canEdit && ( // Modal only shows if canEdit is true
-          <motion.div 
-            className="fixed inset-0 bg-black bg-opacity-70 dark:bg-opacity-80 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div 
-              className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-700"
-              initial={{ y: -50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 50, opacity: 0 }}
-            >
-              <h2 className="text-2xl font-extrabold text-blue-600 dark:text-blue-400 mb-6 flex items-center gap-2">
-                {editingEntry ? <Edit size={24} /> : <Plus size={24} />} 
-                {editingEntry ? "Edit Session" : "Add New Session"}
-              </h2>
-
-              <div className="space-y-4">
-                <select
-                  className="w-full border rounded-xl p-3 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 dark:border-gray-600"
-                  value={form.day}
-                  onChange={(e) => setForm({ ...form, day: e.target.value })}
-                >
-                  <option value="">Select Day</option>
-                  {days.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  className="w-full border rounded-xl p-3 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 dark:border-gray-600"
-                  value={form.time}
-                  onChange={(e) => setForm({ ...form, time: e.target.value })}
-                >
-                  <option value="">Select Time</option>
-                  {times.map((t) => (
-                    <option key={t} value={t}>
-                      {t.slice(0, 5)}
-                    </option>
-                  ))}
-                </select>
-
-                <input
-                  type="text"
-                  placeholder="Subject Name (e.g., Web Dev, DBMS)"
-                  className="w-full border rounded-xl p-3 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 dark:border-gray-600"
-                  value={form.subject}
-                  onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                />
-
-                <input
-                  type="text"
-                  placeholder="Location (e.g., L-101, C-Lab 3)"
-                  className="w-full border rounded-xl p-3 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 dark:border-gray-600"
-                  value={form.location}
-                  onChange={(e) => setForm({ ...form, location: e.target.value })}
-                />
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-6">
-                <button
-                  className="px-5 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition duration-200 flex items-center gap-2"
-                  onClick={() => setShowModal(false)}
-                >
-                  <X size={20} /> Cancel
-                </button>
-                
-                <button
-                  className="px-5 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
-                  onClick={handleSave}
-                >
-                  <Save size={20} /> Save Changes
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
 }

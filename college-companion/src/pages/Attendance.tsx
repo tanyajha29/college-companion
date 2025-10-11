@@ -1,338 +1,230 @@
 import { useState, useEffect } from "react";
-import { CheckCircle, XCircle, ChevronDown, Save, BookOpen, GraduationCap, Users } from "lucide-react";
+import axios from "axios";
+import { CheckCircle, XCircle, ChevronDown, Save, BookOpen, GraduationCap, Users, Calendar, UserCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-type Subject = {
-  id: number;
-  name: string;
-  total: number;
-  present: number;
+// --- Type Definitions for API Data ---
+type Session = {
+    sessionid: number;
+    subject_name: string;
+    divisionname: string;
+    day_of_week: string;
+    start_time: string;
 };
 
-// --- Mock Data & Configuration ---
-
-// Subjects for each department
-const departmentSubjects: Record<string, string[]> = {
-  INFT: ["Mathematics", "DBMS", "Operating Systems", "Computer Networks"],
-  COMP: ["Mathematics", "Data Structures", "Algorithms", "Software Engg"],
-  EXTC: ["Electronics", "Signal Processing", "Control Systems", "Analog Circuits"],
-  EXCS: ["Electronics", "VLSI", "Communication Engg", "Control Systems"],
+type StudentRosterItem = {
+    studentid: number;
+    rollnumber: string;
+    username: string;
 };
 
-// Subject → Icon mapping (Ensure these paths exist in your /public/icons folder)
-const subjectIcons: Record<string, string> = {
-  Mathematics: "/icons/mathematics.png",
-  DBMS: "/icons/dbms.png",
-  "Operating Systems": "/icons/operatingsystems.png",
-  "Computer Networks": "/icons/computernetworks.png",
-  "Data Structures": "/icons/datastructures.png",
-  Algorithms: "/icons/algorithms.png",
-  "Software Engg": "/icons/softwareengineering.png",
-  Electronics: "/icons/electronics.png",
-  "Signal Processing": "/icons/signalprocessing.png",
-  "Control Systems": "/icons/controlsystems.png",
-  "Analog Circuits": "/icons/analogcircuits.png",
-  "Communication Engg": "/icons/communicationEngg.png",
-  VLSI: "/icons/vlsi.png",
+type AttendanceRecord = {
+    [studentid: number]: 'Present' | 'Absent';
 };
 
-// Mock Subjects for dynamic generation (Replace with API call)
-const getInitialSubjects = (dept: string): Subject[] => {
-  const subjects = departmentSubjects[dept] || departmentSubjects["INFT"];
-  return subjects.map((name, i) => ({
-    id: i,
-    name,
-    total: 20 + i * 5, 
-    present: 15 + i * 4,
-  }));
+type StudentSummary = {
+    subject_name: string;
+    total_classes: number;
+    classes_attended: number;
+    percentage: string;
+    isBelowThreshold: boolean;
 };
 
-const filterOptions = {
-    departments: Object.keys(departmentSubjects),
-    years: ["1st", "2nd", "3rd", "4th"],
-    divs: ["A", "B", "C"],
-};
+// ===================================================================
+// Main Page Component: Routes view based on user role
+// ===================================================================
+export default function AttendancePage() {
+    const role = localStorage.getItem("role") || "student";
 
-// OPTION 1: Modern Neutral & Earthy Palette
-
-const subjectCardStyles = [
-  // Theme 1: Primary Blue (Consistent Accent)
-  { bg: "bg-blue-50", border: "border-blue-700", text: "text-blue-900", highlight: "bg-blue-200" },
-  // Theme 2: Deep Teal/Emerald
-  { bg: "bg-emerald-50", border: "border-emerald-700", text: "text-emerald-900", highlight: "bg-emerald-200" },
-  // Theme 3: Warm Sand/Brown
-  { bg: "bg-amber-50", border: "border-amber-700", text: "text-amber-900", highlight: "bg-amber-200" },
-  // Theme 4: Muted Lilac/Violet
-  { bg: "bg-violet-50", border: "border-violet-700", text: "text-violet-900", highlight: "bg-violet-200" },
-  // Theme 5: Subtle Cool Gray
-  { bg: "bg-gray-100", border: "border-gray-600", text: "text-gray-800", highlight: "bg-gray-300" },
-];
-
-// --- Main Component ---
-
-export default function Attendance() {
-  const role = localStorage.getItem("role") || "student";
-  const isEditable = role === "staff";
-  
-  // Set initial state based on a student's (mock) context
-  const studentDept = role === 'student' ? 'INFT' : 'INFT'; 
-
-  const [department, setDepartment] = useState(studentDept);
-  const [year, setYear] = useState(filterOptions.years[0]);
-  const [div, setDiv] = useState(filterOptions.divs[0]);
-  const [subjects, setSubjects] = useState<Subject[]>(getInitialSubjects(studentDept));
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Data Fetching Simulation
-  useEffect(() => {
-    // 💡 Replace this with your actual API fetch call later
-    setSubjects([]); // Clear subjects to show loading state
-    const timer = setTimeout(() => {
-        setSubjects(getInitialSubjects(department));
-    }, 500); // Simulate API call delay
-    return () => clearTimeout(timer);
-  }, [department, year, div]);
-
-
-  // Handle attendance update (for Staff)
-  const handleAttendanceChange = (id: number, field: "total" | "present", value: number) => {
-    if (!isEditable) return; 
-    setSubjects((prev) =>
-      prev.map((sub) => {
-        if (sub.id === id) {
-            let total = sub.total;
-            let present = sub.present;
-
-            if (field === 'total') {
-                total = Math.max(0, value);
-                if (present > total) present = total; 
-            } else {
-                present = Math.max(0, value);
-                if (present > total) present = total;
-            }
-            return { ...sub, total, present };
-        }
-        return sub;
-      })
-    );
-  };
-    
-  // Handle data saving (Mock Save)
-  const handleSave = async () => {
-    setIsSaving(true);
-    // 🔑 Send PUT/PATCH request to API here
-    console.log("Saving attendance data:", subjects);
-    await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
-    setIsSaving(false);
-    alert(`Attendance data saved for ${department}, ${year}, Div ${div}.`);
-  };
-
-  // Render Utility Component
-  const FilterSelect = ({ label, value, options, onChange, disabled, icon: Icon }: { label: string, value: string, options: string[], onChange: (v: string) => void, disabled: boolean, icon: React.ElementType }) => (
-    <div className="flex flex-col flex-grow">
-        <label className="text-sm font-medium text-gray-700 mb-1">{label}</label>
-        <div className="relative">
-            <select
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                className={`appearance-none border ${disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white hover:border-blue-500'} p-3 pl-10 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200 w-full`}
-                disabled={disabled}
+    return (
+        <div className="space-y-8 p-0 bg-gray-50 min-h-screen pt-10">
+            <motion.header
+                className="text-3xl font-extrabold text-gray-900 border-b pb-3 bg-white shadow-sm p-6"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
             >
-                {options.map((opt) => (
-                    <option key={opt} value={opt}>
-                        {opt}
-                    </option>
-                ))}
-            </select>
-            <Icon size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
-            <ChevronDown size={18} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+                Attendance Tracker
+            </motion.header>
+
+            <div className="max-w-7xl mx-auto px-6">
+                {role === "student" ? <StudentAttendanceSummary /> : <MarkAttendance />}
+            </div>
         </div>
-    </div>
-  );
+    );
+}
 
-  return (
-    
-    
-    <div className="space-y-8 p-0 bg-gray-50 pt-16">
-      <motion.h1 
-        className="text-3xl font-extrabold text-gray-900 border-b pb-3 mb-6 p-6 bg-white shadow-sm"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        Attendance Manager {role !== 'student' ? `(${role.toUpperCase()})` : ''}
-      </motion.h1>
+// ===================================================================
+// Staff/Admin View: For marking attendance (REQ-4)
+// ===================================================================
+function MarkAttendance() {
+    const [sessions, setSessions] = useState<Session[]>([]);
+    const [selectedSession, setSelectedSession] = useState('');
+    const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
+    const [students, setStudents] = useState<StudentRosterItem[]>([]);
+    const [attendance, setAttendance] = useState<AttendanceRecord>({});
+    const [isLoading, setIsLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const token = localStorage.getItem('token');
 
-      {/* --- Filter Section --- */}
-      <motion.div 
-        className="flex flex-wrap items-end gap-4 bg-white p-6 rounded-xl shadow-lg border border-gray-200 max-w-7xl mx-auto"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-      >
-        <FilterSelect 
-          label="Department"
-          value={department}
-          options={filterOptions.departments}
-          onChange={setDepartment}
-          disabled={!isEditable && role !== 'admin'} 
-          icon={GraduationCap}
-        />
-        <FilterSelect 
-          label="Year"
-          value={year}
-          options={filterOptions.years}
-          onChange={setYear}
-          disabled={!isEditable && role !== 'admin'}
-          icon={BookOpen}
-        />
-        <FilterSelect 
-          label="Division"
-          value={div}
-          options={filterOptions.divs}
-          onChange={setDiv}
-          disabled={!isEditable && role !== 'admin'}
-          icon={Users}
-        />
-        
-        {isEditable && (
-            <motion.button
-                onClick={handleSave}
-                className={`mt-6 ml-auto flex items-center gap-2 px-6 py-3 rounded-lg shadow-md transition duration-200 
-                            ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white font-medium'}`}
-                whileHover={isSaving ? {} : { scale: 1.05 }}
-                whileTap={isSaving ? {} : { scale: 0.95 }}
-                disabled={isSaving}
-            >
-                {isSaving ? (
-                    <>
-                        <motion.span
-                            animate={{ rotate: 360 }}
-                            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                        >
-                            <Save size={20} />
-                        </motion.span> 
-                        Saving...
-                    </>
-                ) : (
-                    <>
-                        <Save size={20} /> Save Changes
-                    </>
-                )}
-            </motion.button>
-        )}
-      </motion.div>
+    // 1. Fetch class sessions for the dropdown
+    useEffect(() => {
+        axios.get('/api/attendance/sessions', { headers: { Authorization: `Bearer ${token}` } })
+            .then(res => setSessions(res.data))
+            .catch(err => console.error("Failed to fetch sessions:", err));
+    }, [token]);
 
-      {/* --- Subject Cards --- */}
-      <motion.div 
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 max-w-7xl mx-auto"
-        initial="hidden"
-        animate="visible"
-        variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-      >
-        <AnimatePresence>
-            {subjects.length === 0 && (
-                 <motion.div 
-                    key="loading"
-                    className="col-span-full text-center py-12 text-xl text-gray-500 bg-white rounded-xl shadow-lg border border-dashed"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                 >
-                    <div className="flex justify-center items-center gap-2 mb-3 text-blue-500">
-                        <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                        >
-                            <BookOpen size={30} />
+    // 2. Fetch student roster when a session is selected
+    useEffect(() => {
+        if (selectedSession) {
+            setIsLoading(true);
+            axios.get(`/api/attendance/session-roster/${selectedSession}`, { headers: { Authorization: `Bearer ${token}` } })
+                .then(res => {
+                    setStudents(res.data);
+                    // Default all students to 'Present' for convenience
+                    const initialAttendance = res.data.reduce((acc: AttendanceRecord, student: StudentRosterItem) => {
+                        acc[student.studentid] = 'Present';
+                        return acc;
+                    }, {});
+                    setAttendance(initialAttendance);
+                })
+                .catch(err => console.error("Failed to fetch roster:", err))
+                .finally(() => setIsLoading(false));
+        }
+    }, [selectedSession, token]);
+
+    const handleStatusChange = (studentid: number, status: 'Present' | 'Absent') => {
+        setAttendance(prev => ({ ...prev, [studentid]: status }));
+    };
+
+    // 3. Submit attendance to the backend
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        const records = Object.entries(attendance).map(([studentid, status]) => ({ studentid: parseInt(studentid), status }));
+        const payload = { sessionId: selectedSession, date: attendanceDate, records };
+
+        try {
+            await axios.post('/api/attendance/mark', payload, { headers: { Authorization: `Bearer ${token}` } });
+            alert('Attendance Submitted Successfully!');
+        } catch (error) {
+            console.error("Failed to submit attendance:", error);
+            alert('Submission failed. Please check the console.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-6">
+                <h2 className="text-xl font-bold text-gray-800 border-b pb-3">Mark Class Attendance</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Session Select */}
+                    <div className="flex flex-col">
+                        <label className="text-sm font-medium text-gray-700 mb-1">Class Session</label>
+                        <select onChange={(e) => setSelectedSession(e.target.value)} required className="p-3 border bg-white rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">-- Select a Session --</option>
+                            {sessions.map(s => (
+                                <option key={s.sessionid} value={s.sessionid}>
+                                    {s.subject_name} (Div: {s.divisionname}) - {s.day_of_week}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    {/* Date Picker */}
+                    <div className="flex flex-col">
+                        <label className="text-sm font-medium text-gray-700 mb-1">Attendance Date</label>
+                        <input type="date" value={attendanceDate} onChange={(e) => setAttendanceDate(e.target.value)} required className="p-3 border bg-white rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+                    </div>
+                </div>
+
+                {isLoading && <p className="text-center text-blue-600">Loading student list...</p>}
+                
+                <AnimatePresence>
+                    {students.length > 0 && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border-t pt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {students.map(student => (
+                                    <div key={student.studentid} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                                        <p className="font-medium">{student.username} ({student.rollnumber})</p>
+                                        <div className="flex gap-2">
+                                            <button type="button" onClick={() => handleStatusChange(student.studentid, 'Present')} className={`px-3 py-1 text-sm rounded-md ${attendance[student.studentid] === 'Present' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Present</button>
+                                            <button type="button" onClick={() => handleStatusChange(student.studentid, 'Absent')} className={`px-3 py-1 text-sm rounded-md ${attendance[student.studentid] === 'Absent' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Absent</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <button type="submit" disabled={isSubmitting} className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg shadow-md text-white font-medium bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400">
+                                {isSubmitting ? 'Submitting...' : <><Save size={20} /> Submit Attendance</>}
+                            </button>
                         </motion.div>
-                        <span className="font-semibold">Loading attendance data...</span>
-                    </div>
-                 </motion.div>
-            )}
-            {subjects.map((sub, i) => {
-              const percentage = sub.total > 0 ? Math.round((sub.present / sub.total) * 100) : 0;
-              const isSafe = percentage >= 75;
-              const statusColorClass = isSafe ? "text-green-700" : "text-red-700";
-              const cardStyle = subjectCardStyles[i % subjectCardStyles.length];
-              
-              return (
-                <motion.div
-                  key={sub.id}
-                  className={`p-5 rounded-xl shadow-lg border-b-4 border-r-2 transition duration-300 hover:shadow-xl ${cardStyle.bg} ${cardStyle.border}`}
-                  variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
-                  whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center">
-                        <img
-                            src={subjectIcons[sub.name] || "/icons/default.png"}
-                            alt={sub.name}
-                            className="w-10 h-10 object-contain mr-3 rounded-full p-1 bg-white shadow-sm"
-                            onError={(e) => (e.currentTarget.src = "/icons/default.png")}
-                        />
-                        <h2 className={`text-lg font-bold ${cardStyle.text}`}>{sub.name}</h2>
-                    </div>
-                    {isSafe ? (
-                        <CheckCircle size={20} className="text-green-500" title="Attendance Safe" />
-                    ) : (
-                        <XCircle size={20} className="text-red-500" title="Low Attendance Risk" />
                     )}
-                  </div>
+                </AnimatePresence>
+            </form>
+        </motion.div>
+    );
+}
 
-                  {/* Attendance Inputs (staff edit/view, others view only) */}
-                  <div className="flex gap-4 mb-4 items-center">
-                    <div className="w-1/2">
-                        <label className="block text-xs font-medium text-gray-600">Total Classes</label>
-                        <input
-                            type="number"
-                            value={sub.total}
-                            onChange={(e) => handleAttendanceChange(sub.id, "total", parseInt(e.target.value) || 0)}
-                            className={`border ${isEditable ? 'border-gray-300' : 'border-dashed border-gray-200'} p-2 w-full rounded-lg text-sm font-semibold ${!isEditable ? 'bg-gray-50 text-gray-700' : ''} focus:ring-blue-500 focus:border-blue-500 transition`}
-                            disabled={!isEditable}
-                        />
-                    </div>
-                    <div className="w-1/2">
-                        <label className="block text-xs font-medium text-gray-600">Classes Present</label>
-                        <input
-                            type="number"
-                            value={sub.present}
-                            onChange={(e) => handleAttendanceChange(sub.id, "present", parseInt(e.target.value) || 0)}
-                            className={`border ${isEditable ? 'border-gray-300' : 'border-dashed border-gray-200'} p-2 w-full rounded-lg text-sm font-semibold ${!isEditable ? 'bg-gray-50 text-gray-700' : ''} focus:ring-blue-500 focus:border-blue-500 transition`}
-                            disabled={!isEditable}
-                        />
-                    </div>
-                  </div>
+// ===================================================================
+// Student View: Shows attendance summary (REQ-5 & REQ-6)
+// ===================================================================
+function StudentAttendanceSummary() {
+    const [summary, setSummary] = useState<StudentSummary[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const token = localStorage.getItem('token');
 
-                  {/* Progress Bar & Percentage */}
-                  <div className="w-full bg-gray-300 h-2 rounded-full mt-2">
-                    <motion.div
-                      className={`h-2 rounded-full ${isSafe ? "bg-green-600" : "bg-red-600"}`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${percentage}%` }}
-                      transition={{ duration: 1.5 }}
-                    ></motion.div>
-                  </div>
-                  <p className={`text-sm mt-2 font-bold ${statusColorClass}`}>
-                    {percentage}% Attendance ({sub.present}/{sub.total})
-                  </p>
-                </motion.div>
-              );
-            })}
-        </AnimatePresence>
-      </motion.div>
-      
-      {subjects.length === 0 && !isSaving && ( 
-          <motion.div 
-            key="no-data"
-            className="col-span-full text-center py-12 text-xl text-gray-500 bg-white rounded-xl shadow-lg border border-dashed p-6 max-w-7xl mx-auto"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-              No attendance data found for the selected filters.
-          </motion.div>
-      )}
-    </div>
-  );
+    useEffect(() => {
+        axios.get('/api/attendance/my-summary', { headers: { Authorization: `Bearer ${token}` } })
+            .then(res => setSummary(res.data))
+            .catch(err => console.error("Failed to fetch summary:", err))
+            .finally(() => setIsLoading(false));
+    }, [token]);
+
+    if (isLoading) return <p className="text-center text-xl text-blue-600 py-10">Loading your attendance summary...</p>;
+
+    return (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">My Attendance Summary</h2>
+            {summary.length === 0 ? (
+                <div className="text-center py-12 text-xl text-gray-500 bg-white rounded-xl shadow-lg border border-dashed">
+                    No attendance records found for you yet.
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {summary.map(subject => {
+                        const isSafe = !subject.isBelowThreshold;
+                        return (
+                            <motion.div
+                                key={subject.subject_name}
+                                className={`p-5 rounded-xl shadow-lg border-b-4 ${isSafe ? 'border-green-600 bg-green-50' : 'border-red-600 bg-red-50'}`}
+                                whileHover={{ scale: 1.03 }}
+                            >
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className={`text-lg font-bold ${isSafe ? 'text-green-900' : 'text-red-900'}`}>{subject.subject_name}</h3>
+                                    {isSafe ? <CheckCircle size={24} className="text-green-500" /> : <XCircle size={24} className="text-red-500" />}
+                                </div>
+                                <div className="w-full bg-gray-300 h-2 rounded-full mb-2">
+                                    <motion.div
+                                        className={`h-2 rounded-full ${isSafe ? "bg-green-600" : "bg-red-600"}`}
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${subject.percentage}%` }}
+                                        transition={{ duration: 1 }}
+                                    />
+                                </div>
+                                <p className={`text-sm font-bold ${isSafe ? 'text-green-800' : 'text-red-800'}`}>
+                                    {subject.percentage}% Attendance ({subject.classes_attended}/{subject.total_classes})
+                                </p>
+                                {!isSafe && (
+                                    <p className="text-red-700 font-semibold mt-2 text-xs">
+                                        ⚠️ Alert: Attendance is below the required threshold!
+                                    </p>
+                                )}
+                            </motion.div>
+                        );
+                    })}
+                </div>
+            )}
+        </motion.div>
+    );
 }
