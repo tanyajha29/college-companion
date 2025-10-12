@@ -42,9 +42,9 @@ export default function AttendancePage() {
     const role = localStorage.getItem("role") || "student";
 
     return (
-        <div className="space-y-8 p-0 bg-gray-50 min-h-screen pt-10">
+        <div className="space-y-8 p-0 bg-gray-900 min-h-screen pt-10">
             <motion.header
-                className="text-3xl font-extrabold text-gray-900 border-b pb-3 bg-white shadow-sm p-6"
+                className="text-3xl font-extrabold text-cyan-400 border-b border-gray-700 pb-3 bg-gray-800 shadow-xl p-6 sticky top-0 z-10"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -144,21 +144,29 @@ function MarkAttendance() {
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-6">
-                <h2 className="text-xl font-bold text-gray-800 border-b pb-3">Mark Class Attendance</h2>
+            <form onSubmit={handleSubmit} className="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 space-y-6">
+                <h2 className="text-xl font-bold text-gray-100 border-b border-gray-700 pb-3">Mark Class Attendance</h2>
                 
                 {/* FILTERS */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex flex-col">
-                        <label className="text-sm font-medium text-gray-700 mb-1">Department</label>
-                        <select onChange={(e) => setSelectedDepartment(e.target.value)} required className="p-3 border bg-white rounded-lg shadow-sm">
+                        <label className="text-sm font-medium text-gray-300 mb-1">Department</label>
+                        <select 
+                            onChange={(e) => setSelectedDepartment(e.target.value)} 
+                            required 
+                            className="p-3 border border-gray-600 bg-gray-700 text-gray-100 rounded-lg shadow-inner focus:border-cyan-500"
+                        >
                             <option value="">-- Select Department --</option>
                             {departments.map(d => <option key={d.departmentid} value={d.departmentid}>{d.departmentname}</option>)}
                         </select>
                     </div>
                     <div className="flex flex-col">
-                        <label className="text-sm font-medium text-gray-700 mb-1">Year</label>
-                        <select onChange={(e) => setSelectedYear(e.target.value)} required className="p-3 border bg-white rounded-lg shadow-sm">
+                        <label className="text-sm font-medium text-gray-300 mb-1">Year</label>
+                        <select 
+                            onChange={(e) => setSelectedYear(e.target.value)} 
+                            required 
+                            className="p-3 border border-gray-600 bg-gray-700 text-gray-100 rounded-lg shadow-inner focus:border-cyan-500"
+                        >
                             <option value="">-- Select Year --</option>
                             <option value="1">First Year</option>
                             <option value="2">Second Year</option>
@@ -167,35 +175,62 @@ function MarkAttendance() {
                         </select>
                     </div>
                     <div className="flex flex-col">
-                        <label className="text-sm font-medium text-gray-700 mb-1">Class Session</label>
-                        <select onChange={(e) => setSelectedSession(e.target.value)} required disabled={!selectedDepartment || sessions.length === 0} className="p-3 border bg-white rounded-lg shadow-sm disabled:bg-gray-100">
+                        <label className="text-sm font-medium text-gray-300 mb-1">Class Session</label>
+                        <select 
+                            onChange={(e) => setSelectedSession(e.target.value)} 
+                            required 
+                            disabled={!selectedDepartment || sessions.length === 0} 
+                            className="p-3 border border-gray-600 bg-gray-700 text-gray-100 rounded-lg shadow-inner disabled:bg-gray-700 disabled:text-gray-500 focus:border-cyan-500"
+                        >
                             <option value="">-- Select Session --</option>
                             {sessions.map(s => <option key={s.sessionid} value={s.sessionid}>{s.subject_name} (Div: {s.divisionname})</option>)}
                         </select>
                     </div>
                 </div>
                 <div className="flex flex-col md:w-1/3">
-                    <label className="text-sm font-medium text-gray-700 mb-1">Attendance Date</label>
-                    <input type="date" value={attendanceDate} onChange={(e) => setAttendanceDate(e.target.value)} required className="p-3 border bg-white rounded-lg shadow-sm" />
+                    <label className="text-sm font-medium text-gray-300 mb-1">Attendance Date</label>
+                    <input 
+                        type="date" 
+                        value={attendanceDate} 
+                        onChange={(e) => setAttendanceDate(e.target.value)} 
+                        required 
+                        className="p-3 border border-gray-600 bg-gray-700 text-gray-100 rounded-lg shadow-inner focus:border-cyan-500" 
+                    />
                 </div>
                 
-                {isLoading && <p className="text-center text-blue-600">Loading...</p>}
+                {isLoading && <p className="text-center text-cyan-400">Loading...</p>}
                 
                 <AnimatePresence>
                     {students.length > 0 && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border-t pt-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border-t border-gray-700 pt-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {students.map(student => (
-                                    <div key={student.studentid} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
-                                        <p className="font-medium">{student.username} ({student.rollnumber})</p>
+                                    <div key={student.studentid} className="flex items-center justify-between p-3 border border-gray-600 rounded-lg bg-gray-700">
+                                        <p className="font-medium text-gray-100">{student.username} ({student.rollnumber})</p>
                                         <div className="flex gap-2">
-                                            <button type="button" onClick={() => handleStatusChange(student.studentid, 'Present')} className={`px-3 py-1 text-sm rounded-md ${attendance[student.studentid] === 'Present' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Present</button>
-                                            <button type="button" onClick={() => handleStatusChange(student.studentid, 'Absent')} className={`px-3 py-1 text-sm rounded-md ${attendance[student.studentid] === 'Absent' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Absent</button>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => handleStatusChange(student.studentid, 'Present')} 
+                                                className={`px-3 py-1 text-sm rounded-md transition ${attendance[student.studentid] === 'Present' ? 'bg-green-600 text-white shadow-lg shadow-green-900/50' : 'bg-gray-600 text-gray-300 hover:bg-gray-500'}`}
+                                            >
+                                                Present
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => handleStatusChange(student.studentid, 'Absent')} 
+                                                className={`px-3 py-1 text-sm rounded-md transition ${attendance[student.studentid] === 'Absent' ? 'bg-red-600 text-white shadow-lg shadow-red-900/50' : 'bg-gray-600 text-gray-300 hover:bg-gray-500'}`}
+                                            >
+                                                Absent
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                            <button type="submit" disabled={isSubmitting} className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg shadow-md text-white font-medium bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400">
+                            <button 
+                                type="submit" 
+                                disabled={isSubmitting} 
+                                className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg shadow-xl text-white font-medium bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 disabled:text-gray-400 transition"
+                            >
                                 {isSubmitting ? 'Submitting...' : <><Save size={20} /> Submit Attendance</>}
                             </button>
                         </motion.div>
@@ -221,13 +256,13 @@ function StudentAttendanceSummary() {
             .finally(() => setIsLoading(false));
     }, [token]);
 
-    if (isLoading) return <p className="text-center text-xl text-blue-600 py-10">Loading your attendance summary...</p>;
+    if (isLoading) return <p className="text-center text-xl text-cyan-400 py-10">Loading your attendance summary...</p>;
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">My Attendance Summary</h2>
+            <h2 className="text-2xl font-bold text-gray-100 mb-6">My Attendance Summary</h2>
             {summary.length === 0 ? (
-                <div className="text-center py-12 text-xl text-gray-500 bg-white rounded-xl shadow-lg border border-dashed">
+                <div className="text-center py-12 text-xl text-gray-400 bg-gray-800 rounded-xl shadow-lg border border-dashed border-gray-700">
                     No attendance records found for you yet.
                 </div>
             ) : (
@@ -237,26 +272,26 @@ function StudentAttendanceSummary() {
                         return (
                             <motion.div
                                 key={subject.subject_name}
-                                className={`p-5 rounded-xl shadow-lg border-b-4 ${isSafe ? 'border-green-600 bg-green-50' : 'border-red-600 bg-red-50'}`}
+                                className={`p-5 rounded-xl shadow-xl border-b-4 bg-gray-800 ${isSafe ? 'border-green-600' : 'border-red-600'}`}
                                 whileHover={{ scale: 1.03 }}
                             >
                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className={`text-lg font-bold ${isSafe ? 'text-green-900' : 'text-red-900'}`}>{subject.subject_name}</h3>
+                                    <h3 className={`text-lg font-bold ${isSafe ? 'text-green-400' : 'text-red-400'}`}>{subject.subject_name}</h3>
                                     {isSafe ? <CheckCircle size={24} className="text-green-500" /> : <XCircle size={24} className="text-red-500" />}
                                 </div>
-                                <div className="w-full bg-gray-300 h-2 rounded-full mb-2">
+                                <div className="w-full bg-gray-600 h-2 rounded-full mb-2">
                                     <motion.div
-                                        className={`h-2 rounded-full ${isSafe ? "bg-green-600" : "bg-red-600"}`}
+                                        className={`h-2 rounded-full ${isSafe ? "bg-green-500" : "bg-red-500"}`}
                                         initial={{ width: 0 }}
                                         animate={{ width: `${subject.percentage}%` }}
                                         transition={{ duration: 1 }}
                                     />
                                 </div>
-                                <p className={`text-sm font-bold ${isSafe ? 'text-green-800' : 'text-red-800'}`}>
+                                <p className={`text-sm font-bold ${isSafe ? 'text-green-400' : 'text-red-400'}`}>
                                     {subject.percentage}% Attendance ({subject.classes_attended}/{subject.total_classes})
                                 </p>
                                 {!isSafe && (
-                                    <p className="text-red-700 font-semibold mt-2 text-xs">
+                                    <p className="text-red-400 font-semibold mt-2 text-xs p-2 bg-gray-900 rounded-md border border-red-600">
                                         ⚠️ Alert: Attendance is below the required threshold!
                                     </p>
                                 )}
