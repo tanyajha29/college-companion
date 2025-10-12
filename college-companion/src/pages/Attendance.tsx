@@ -23,9 +23,8 @@ type StudentRosterItem = {
     username: string;
 };
 
-// CORRECTED: This type now uses 'p' | 'a'
 type AttendanceRecord = {
-    [studentid: number]: 'p' | 'a';
+    [studentid: number]: 'Present' | 'Absent';
 };
 
 type StudentSummary = {
@@ -63,14 +62,11 @@ export default function AttendancePage() {
 // ===================================================================
 // Staff/Admin View: For marking attendance
 // ===================================================================
-// In src/pages/Attendance.tsx
-
 function MarkAttendance() {
     const [departments, setDepartments] = useState<Department[]>([]);
     const [sessions, setSessions] = useState<Session[]>([]);
     const [students, setStudents] = useState<StudentRosterItem[]>([]);
-    // ✅ CHANGED: State now uses the exact capitalized words
-    const [attendance, setAttendance] = useState<{[studentid: number]: 'Present' | 'Absent'}>({});
+    const [attendance, setAttendance] = useState<AttendanceRecord>({});
 
     // Filter states
     const [selectedDepartment, setSelectedDepartment] = useState('');
@@ -82,19 +78,21 @@ function MarkAttendance() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const token = localStorage.getItem('token');
 
-    // ... (useEffect hooks for fetching data do not need changes) ...
+    // 1. Fetch departments on component mount
     useEffect(() => {
         axios.get('/api/attendance/departments', { headers: { Authorization: `Bearer ${token}` } })
             .then(res => setDepartments(res.data))
             .catch(err => console.error("Failed to fetch departments:", err));
     }, [token]);
 
+    // 2. Fetch sessions when a department is selected
     useEffect(() => {
         if (selectedDepartment) {
             setIsLoading(true);
-            setSessions([]);
-            setSelectedSession('');
-            setStudents([]);
+            setSessions([]); // Clear previous sessions
+            setSelectedSession(''); // Reset session selection
+            setStudents([]); // Clear students
+            
             axios.get('/api/attendance/sessions', {
                 headers: { Authorization: `Bearer ${token}` },
                 params: { departmentId: selectedDepartment }
@@ -105,14 +103,14 @@ function MarkAttendance() {
         }
     }, [selectedDepartment, token]);
 
+    // 3. Fetch student roster when a session is selected
     useEffect(() => {
         if (selectedSession) {
             setIsLoading(true);
             axios.get(`/api/attendance/session-roster/${selectedSession}`, { headers: { Authorization: `Bearer ${token}` } })
                 .then(res => {
                     setStudents(res.data);
-                    // ✅ CHANGED: Default all students to 'Present'
-                    const initialAttendance = res.data.reduce((acc: {[studentid: number]: 'Present' | 'Absent'}, student: StudentRosterItem) => {
+                    const initialAttendance = res.data.reduce((acc: AttendanceRecord, student: StudentRosterItem) => {
                         acc[student.studentid] = 'Present';
                         return acc;
                     }, {});
@@ -123,7 +121,6 @@ function MarkAttendance() {
         }
     }, [selectedSession, token]);
 
-    // ✅ CHANGED: Function now handles 'Present' and 'Absent'
     const handleStatusChange = (studentid: number, status: 'Present' | 'Absent') => {
         setAttendance(prev => ({ ...prev, [studentid]: status }));
     };
@@ -150,7 +147,7 @@ function MarkAttendance() {
             <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-6">
                 <h2 className="text-xl font-bold text-gray-800 border-b pb-3">Mark Class Attendance</h2>
                 
-                {/* FILTERS (no changes) */}
+                {/* FILTERS */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex flex-col">
                         <label className="text-sm font-medium text-gray-700 mb-1">Department</label>
@@ -171,7 +168,7 @@ function MarkAttendance() {
                     </div>
                     <div className="flex flex-col">
                         <label className="text-sm font-medium text-gray-700 mb-1">Class Session</label>
-                        <select onChange={(e) => setSelectedSession(e.target.value)} required disabled={!selectedDepartment} className="p-3 border bg-white rounded-lg shadow-sm disabled:bg-gray-100">
+                        <select onChange={(e) => setSelectedSession(e.target.value)} required disabled={!selectedDepartment || sessions.length === 0} className="p-3 border bg-white rounded-lg shadow-sm disabled:bg-gray-100">
                             <option value="">-- Select Session --</option>
                             {sessions.map(s => <option key={s.sessionid} value={s.sessionid}>{s.subject_name} (Div: {s.divisionname})</option>)}
                         </select>
@@ -192,7 +189,6 @@ function MarkAttendance() {
                                     <div key={student.studentid} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
                                         <p className="font-medium">{student.username} ({student.rollnumber})</p>
                                         <div className="flex gap-2">
-                                            {/* ✅ CHANGED: Buttons now use 'Present' and 'Absent' */}
                                             <button type="button" onClick={() => handleStatusChange(student.studentid, 'Present')} className={`px-3 py-1 text-sm rounded-md ${attendance[student.studentid] === 'Present' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Present</button>
                                             <button type="button" onClick={() => handleStatusChange(student.studentid, 'Absent')} className={`px-3 py-1 text-sm rounded-md ${attendance[student.studentid] === 'Absent' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Absent</button>
                                         </div>
@@ -206,6 +202,69 @@ function MarkAttendance() {
                     )}
                 </AnimatePresence>
             </form>
+        </motion.div>
+    );
+}
+
+// ===================================================================
+// Student View: Shows attendance summary
+// ===================================================================
+function StudentAttendanceSummary() {
+    const [summary, setSummary] = useState<StudentSummary[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const token = localStorage.getItem('token');
+
+    useEffect(() => {
+        axios.get('/api/attendance/my-summary', { headers: { Authorization: `Bearer ${token}` } })
+            .then(res => setSummary(res.data))
+            .catch(err => console.error("Failed to fetch summary:", err))
+            .finally(() => setIsLoading(false));
+    }, [token]);
+
+    if (isLoading) return <p className="text-center text-xl text-blue-600 py-10">Loading your attendance summary...</p>;
+
+    return (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">My Attendance Summary</h2>
+            {summary.length === 0 ? (
+                <div className="text-center py-12 text-xl text-gray-500 bg-white rounded-xl shadow-lg border border-dashed">
+                    No attendance records found for you yet.
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {summary.map(subject => {
+                        const isSafe = !subject.isBelowThreshold;
+                        return (
+                            <motion.div
+                                key={subject.subject_name}
+                                className={`p-5 rounded-xl shadow-lg border-b-4 ${isSafe ? 'border-green-600 bg-green-50' : 'border-red-600 bg-red-50'}`}
+                                whileHover={{ scale: 1.03 }}
+                            >
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className={`text-lg font-bold ${isSafe ? 'text-green-900' : 'text-red-900'}`}>{subject.subject_name}</h3>
+                                    {isSafe ? <CheckCircle size={24} className="text-green-500" /> : <XCircle size={24} className="text-red-500" />}
+                                </div>
+                                <div className="w-full bg-gray-300 h-2 rounded-full mb-2">
+                                    <motion.div
+                                        className={`h-2 rounded-full ${isSafe ? "bg-green-600" : "bg-red-600"}`}
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${subject.percentage}%` }}
+                                        transition={{ duration: 1 }}
+                                    />
+                                </div>
+                                <p className={`text-sm font-bold ${isSafe ? 'text-green-800' : 'text-red-800'}`}>
+                                    {subject.percentage}% Attendance ({subject.classes_attended}/{subject.total_classes})
+                                </p>
+                                {!isSafe && (
+                                    <p className="text-red-700 font-semibold mt-2 text-xs">
+                                        ⚠️ Alert: Attendance is below the required threshold!
+                                    </p>
+                                )}
+                            </motion.div>
+                        );
+                    })}
+                </div>
+            )}
         </motion.div>
     );
 }
