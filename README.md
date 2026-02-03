@@ -108,66 +108,13 @@ Feature-based layout across client and server:
 client/
   src/
     features/
-      auth/
-        pages/
-        components/
-      home/
-        pages/
-      dashboard/
-        pages/
-        components/
-      timetable/
-        pages/
-      attendance/
-        pages/
-      reminders/
-        pages/
-      internship/
-        pages/
-        components/
-      profile/
-        pages/
     shared/
-      api.ts
-      components/
-        Navbar.tsx
-  public/
 server/
   src/
     features/
-      auth/
-        controller.js
-        routes.js
-        validations.js
-      attendance/
-        routes.js
-        service.js
-      timetable/
-        routes.js
-      internships/
-        routes.js
-      reminders/
-        routes.js
-      documents/
-        routes.js
-      payments/
-        routes.js
-      ai/
-        routes.js
-      audit/
-        routes.js
     shared/
-      middleware/
-      services/
     config/
-      env.js
     db/
-      index.js
-    seeds/
-      demo_data.sql
-      full_demo_data.sql
-  apply-migration.js
-docker-compose.yml
 ```
 
 ---
