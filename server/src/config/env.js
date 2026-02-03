@@ -2,11 +2,17 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const parseOrigins = (value) =>
+  (value || "http://localhost:5173")
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+
 export const env = {
   nodeEnv: process.env.NODE_ENV || "development",
   port: Number(process.env.PORT || 5000),
   jwtSecret: process.env.JWT_SECRET,
-  clientOrigin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
+  clientOrigin: parseOrigins(process.env.CLIENT_ORIGIN),
   db: {
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
@@ -37,5 +43,9 @@ export const env = {
   openai: {
     apiKey: process.env.OPENAI_API_KEY,
     model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+  },
+  ollama: {
+    url: process.env.OLLAMA_URL || "http://localhost:11434",
+    model: process.env.OLLAMA_MODEL || "llama3.1:8b",
   },
 };
