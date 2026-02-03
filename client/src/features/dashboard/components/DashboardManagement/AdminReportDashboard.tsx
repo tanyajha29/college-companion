@@ -1,6 +1,7 @@
 
 import { Users, Briefcase, BookOpen, TrendingUp, Filter } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 // Mock Data for Key Metrics
 const stats = [
@@ -19,6 +20,34 @@ const mockChartData = [
 ];
 
 export default function AdminReportDashboard() {
+  const API_BASE = (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
+  const [feedback, setFeedback] = useState("");
+  const [sentiment, setSentiment] = useState<{ mood: string; score: number; summary: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const analyzeSentiment = async () => {
+    if (!feedback.trim()) return;
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/api/ai/sentiment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ text: feedback }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to analyze sentiment");
+      setSentiment(data);
+    } catch (e: any) {
+      setSentiment({ mood: "error", score: 0, summary: e.message || "Failed to analyze sentiment" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       
@@ -83,6 +112,44 @@ export default function AdminReportDashboard() {
         <div className="p-4 bg-gray-50 text-gray-600 rounded-lg">
             This area is reserved for a detailed, filterable table of report data (e.g., User Activity Log or Departmental Performance).
         </div>
+      </motion.div>
+
+      {/* 5. Sentiment Analysis Panel */}
+      <motion.div
+        className="bg-white p-6 rounded-xl shadow-lg border border-gray-200"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+      >
+        <h3 className="text-xl font-semibold text-gray-800 mb-2">Faculty Feedback Sentiment</h3>
+        <p className="text-sm text-gray-500 mb-4">Paste student feedback/comments to get a high-level mood report.</p>
+        <textarea
+          value={feedback}
+          onChange={(e) => setFeedback(e.target.value)}
+          rows={4}
+          className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Paste feedback here..."
+        />
+        <div className="mt-3 flex items-center gap-3">
+          <button
+            onClick={analyzeSentiment}
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? "Analyzing..." : "Analyze"}
+          </button>
+          {sentiment && (
+            <div className="text-sm text-gray-700">
+              <span className="font-semibold">Mood:</span> {sentiment.mood} |{" "}
+              <span className="font-semibold">Score:</span> {sentiment.score}
+            </div>
+          )}
+        </div>
+        {sentiment?.summary && (
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg text-sm text-gray-700">
+            {sentiment.summary}
+          </div>
+        )}
       </motion.div>
     </div>
   );

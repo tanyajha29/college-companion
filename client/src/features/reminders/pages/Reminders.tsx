@@ -28,6 +28,8 @@ const getCurrentUser = () => {
   return { role, department, division };
 };
 
+const API_BASE = (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
+
 /**
  * 🌟 REAL DATABASE CALL: Fetches reminders from the backend API.
  * The filtering logic must be on the server at http://localhost:5000/api/reminders.
@@ -44,7 +46,7 @@ const fetchRemindersFromDB = async (): Promise<Reminder[]> => {
   };
 
   try {
-    const response = await axios.get<Reminder[]>("http://localhost:5000/api/reminders", {
+    const response = await axios.get<Reminder[]>(`${API_BASE}/api/reminders`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -64,7 +66,7 @@ const saveReminderToDB = async (reminder: Omit<Reminder, "id">): Promise<Reminde
   const token = localStorage.getItem("token");
   try {
     // Send the reminder data to the POST endpoint
-    const response = await axios.post<Reminder>("http://localhost:5000/api/reminders", reminder, {
+    const response = await axios.post<Reminder>(`${API_BASE}/api/reminders`, reminder, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

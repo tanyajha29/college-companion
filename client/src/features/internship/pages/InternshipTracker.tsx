@@ -3,7 +3,8 @@ import { Plus, Upload, X, Clock, DollarSign, Calendar, Mail, Building, Briefcase
 import { motion, AnimatePresence } from "framer-motion";
 
 // --- Configuration ---
-const API_BASE_URL = "http://localhost:5000/api/internships"; 
+const API_BASE = (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
+const API_BASE_URL = `${API_BASE}/api/internships`;
 
 // --- Interfaces ---
 
@@ -528,17 +529,49 @@ const UploadDocuments: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
             return;
         }
 
-        // Simulate API call to fulfill REQ-12
         setUploadStatus('uploading');
         try {
-            // In a real app, you would use a dedicated file upload endpoint like /api/upload
-            // and maybe use FormData for file handling.
-            console.log(`Simulating upload of file: ${file.name}`);
-            await new Promise(resolve => setTimeout(resolve, 1500)); 
-            
+            const token = localStorage.getItem("token");
+            const presignRes = await fetch(`${API_BASE}/api/documents/presign`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ fileName: file.name, contentType: file.type, label: "Internship Document" }),
+            });
+            const presignData = await presignRes.json();
+            if (!presignRes.ok) {
+                throw new Error(presignData.message || "Failed to get upload URL");
+            }
+
+            await fetch(presignData.uploadUrl, {
+                method: "PUT",
+                headers: { "Content-Type": file.type },
+                body: file,
+            });
+
+            const confirmRes = await fetch(`${API_BASE}/api/documents/confirm`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    key: presignData.key,
+                    fileName: file.name,
+                    mimeType: file.type,
+                    label: "Internship Document",
+                }),
+            });
+            const confirmData = await confirmRes.json();
+            if (!confirmRes.ok) {
+                throw new Error(confirmData.message || "Failed to confirm upload");
+            }
+
             setUploadStatus('success');
-            setFile(null); 
-            setTimeout(onCancel, 2000); 
+            setFile(null);
+            setTimeout(onCancel, 2000);
 
         } catch (error) {
             console.error("Upload error:", error);
@@ -607,6 +640,83 @@ const UploadDocuments: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
     );
 };
 
+// --- 7. Resume Compatibility Scorer ---
+const ResumeScorer: React.FC = () => {
+    const API_BASE = (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
+    const [resumeText, setResumeText] = useState("");
+    const [jobDescription, setJobDescription] = useState("");
+    const [result, setResult] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
+
+    const handleScore = async () => {
+        if (!resumeText.trim() || !jobDescription.trim()) return;
+        try {
+            setLoading(true);
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE}/api/ai/resume-score`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ resumeText, jobDescription }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Failed to score resume");
+            setResult(data);
+        } catch (e: any) {
+            setResult({ summary: e.message || "Failed to score resume" });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="p-6">
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white text-center">
+                Resume Compatibility Score
+            </h2>
+            <div className="grid gap-4">
+                <textarea
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    rows={4}
+                    placeholder="Paste your resume text here..."
+                    value={resumeText}
+                    onChange={(e) => setResumeText(e.target.value)}
+                />
+                <textarea
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    rows={4}
+                    placeholder="Paste the job description here..."
+                    value={jobDescription}
+                    onChange={(e) => setJobDescription(e.target.value)}
+                />
+                <button
+                    onClick={handleScore}
+                    disabled={loading}
+                    className="px-6 py-3 rounded-xl font-semibold shadow-lg transition duration-200 text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                >
+                    {loading ? "Scoring..." : "Get Compatibility Score"}
+                </button>
+                {result && (
+                    <div className="bg-indigo-50 dark:bg-gray-800 p-4 rounded-lg text-sm">
+                        {result.score !== undefined && (
+                            <p className="font-semibold">Score: {result.score}</p>
+                        )}
+                        {result.summary && <p className="mt-2">{result.summary}</p>}
+                        {result.strengths?.length ? (
+                            <p className="mt-2">Strengths: {result.strengths.join(", ")}</p>
+                        ) : null}
+                        {result.gaps?.length ? (
+                            <p className="mt-1">Gaps: {result.gaps.join(", ")}</p>
+                        ) : null}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 
 // --- Main Application Component (InternshipTrackerPage) ---
 const InternshipTrackerPage: React.FC = () => {
@@ -618,6 +728,7 @@ const InternshipTrackerPage: React.FC = () => {
     const [selectedApplication, setSelectedApplication] = useState<ApplicationData | null>(null);
     const [showForm, setShowForm] = useState(false);
     const [showUpload, setShowUpload] = useState(false);
+    const [showScore, setShowScore] = useState(false);
 
     const cardClasses = "bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-6 border border-gray-100 dark:border-gray-700";
 
@@ -805,12 +916,26 @@ const InternshipTrackerPage: React.FC = () => {
                             onClick={() => {
                                 setShowUpload(!showUpload);
                                 setShowForm(false); 
+                                setShowScore(false);
                             }}
                             className={`px-6 py-3 rounded-xl font-semibold shadow-lg transition duration-200 flex items-center gap-2 
                                 ${showUpload ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"} text-white transform hover:scale-[1.03]`}
                         >
                             {showUpload ? <X size={20}/> : <Upload size={20}/>} 
                             {showUpload ? "Close Uploader" : "Upload Documents (REQ-12)"}
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                setShowScore(!showScore);
+                                setShowForm(false);
+                                setShowUpload(false);
+                            }}
+                            className={`px-6 py-3 rounded-xl font-semibold shadow-lg transition duration-200 flex items-center gap-2 
+                                ${showScore ? "bg-red-600 hover:bg-red-700" : "bg-indigo-600 hover:bg-indigo-700"} text-white transform hover:scale-[1.03]`}
+                        >
+                            {showScore ? <X size={20}/> : <Plus size={20}/>} 
+                            {showScore ? "Close Scorer" : "Resume Compatibility"}
                         </button>
                     </div>
 
@@ -840,6 +965,21 @@ const InternshipTrackerPage: React.FC = () => {
                             className={`max-w-4xl mx-auto mb-10 ${cardClasses} overflow-hidden`}
                         >
                             <UploadDocuments onCancel={handleCancel} />
+                        </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Resume Scorer */}
+                    <AnimatePresence>
+                        {showScore && (
+                        <motion.div 
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className={`max-w-4xl mx-auto mb-10 ${cardClasses} overflow-hidden`}
+                        >
+                            <ResumeScorer />
                         </motion.div>
                         )}
                     </AnimatePresence>

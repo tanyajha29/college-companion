@@ -40,6 +40,7 @@ type StudentSummary = {
 // ===================================================================
 export default function AttendancePage() {
     const role = localStorage.getItem("role") || "student";
+    const API_BASE = (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
 
     return (
         <div className="space-y-8 p-0 bg-gray-900 min-h-screen pt-10">
@@ -53,7 +54,7 @@ export default function AttendancePage() {
             </motion.header>
 
             <div className="max-w-7xl mx-auto px-6">
-                {role === "student" ? <StudentAttendanceSummary /> : <MarkAttendance />}
+                {role === "student" ? <StudentAttendanceSummary apiBase={API_BASE} /> : <MarkAttendance apiBase={API_BASE} />}
             </div>
         </div>
     );
@@ -62,11 +63,13 @@ export default function AttendancePage() {
 // ===================================================================
 // Staff/Admin View: For marking attendance
 // ===================================================================
-function MarkAttendance() {
+function MarkAttendance({ apiBase }: { apiBase: string }) {
     const [departments, setDepartments] = useState<Department[]>([]);
     const [sessions, setSessions] = useState<Session[]>([]);
     const [students, setStudents] = useState<StudentRosterItem[]>([]);
     const [attendance, setAttendance] = useState<AttendanceRecord>({});
+    const [riskStudents, setRiskStudents] = useState<any[]>([]);
+    const [riskLoading, setRiskLoading] = useState(false);
 
     // Filter states
     const [selectedDepartment, setSelectedDepartment] = useState('');
@@ -80,7 +83,7 @@ function MarkAttendance() {
 
     // 1. Fetch departments on component mount
     useEffect(() => {
-        axios.get('/api/attendance/departments', { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${apiBase}/api/attendance/departments`, { headers: { Authorization: `Bearer ${token}` } })
             .then(res => setDepartments(res.data))
             .catch(err => console.error("Failed to fetch departments:", err));
     }, [token]);
@@ -93,7 +96,7 @@ function MarkAttendance() {
             setSelectedSession(''); // Reset session selection
             setStudents([]); // Clear students
             
-            axios.get('/api/attendance/sessions', {
+            axios.get(`${apiBase}/api/attendance/sessions`, {
                 headers: { Authorization: `Bearer ${token}` },
                 params: { departmentId: selectedDepartment }
             })
@@ -107,7 +110,7 @@ function MarkAttendance() {
     useEffect(() => {
         if (selectedSession) {
             setIsLoading(true);
-            axios.get(`/api/attendance/session-roster/${selectedSession}`, { headers: { Authorization: `Bearer ${token}` } })
+            axios.get(`${apiBase}/api/attendance/session-roster/${selectedSession}`, { headers: { Authorization: `Bearer ${token}` } })
                 .then(res => {
                     setStudents(res.data);
                     const initialAttendance = res.data.reduce((acc: AttendanceRecord, student: StudentRosterItem) => {
@@ -132,13 +135,27 @@ function MarkAttendance() {
         const payload = { sessionId: selectedSession, date: attendanceDate, records };
 
         try {
-            await axios.post('/api/attendance/mark', payload, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.post(`${apiBase}/api/attendance/mark`, payload, { headers: { Authorization: `Bearer ${token}` } });
             alert('Attendance Submitted Successfully!');
         } catch (error) {
             console.error("Failed to submit attendance:", error);
             alert('Submission failed.');
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const fetchRisk = async () => {
+        setRiskLoading(true);
+        try {
+            const res = await axios.get(`${apiBase}/api/attendance/predict-risk`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setRiskStudents(res.data || []);
+        } catch (e) {
+            console.error("Failed to fetch risk students:", e);
+        } finally {
+            setRiskLoading(false);
         }
     };
 
@@ -237,6 +254,32 @@ function MarkAttendance() {
                     )}
                 </AnimatePresence>
             </form>
+
+            <div className="mt-8 bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-gray-100">Predictive Attendance Risk</h3>
+                    <button
+                        type="button"
+                        onClick={fetchRisk}
+                        className="px-4 py-2 rounded-lg bg-cyan-600 text-white hover:bg-cyan-700"
+                        disabled={riskLoading}
+                    >
+                        {riskLoading ? "Analyzing..." : "Run Analysis"}
+                    </button>
+                </div>
+                {riskStudents.length === 0 ? (
+                    <p className="text-gray-400 text-sm">No at-risk students found yet.</p>
+                ) : (
+                    <div className="grid gap-3">
+                        {riskStudents.map((s) => (
+                            <div key={s.studentid} className="p-3 bg-gray-700 rounded-lg text-sm text-gray-100">
+                                <span className="font-semibold">{s.username}</span> — Recent: {s.recentRate}%,
+                                Overall: {s.overallRate}% {s.predictedBelow75 ? "⚠️" : ""}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
         </motion.div>
     );
 }
@@ -244,13 +287,13 @@ function MarkAttendance() {
 // ===================================================================
 // Student View: Shows attendance summary
 // ===================================================================
-function StudentAttendanceSummary() {
+function StudentAttendanceSummary({ apiBase }: { apiBase: string }) {
     const [summary, setSummary] = useState<StudentSummary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const token = localStorage.getItem('token');
 
     useEffect(() => {
-        axios.get('/api/attendance/my-summary', { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${apiBase}/api/attendance/my-summary`, { headers: { Authorization: `Bearer ${token}` } })
             .then(res => setSummary(res.data))
             .catch(err => console.error("Failed to fetch summary:", err))
             .finally(() => setIsLoading(false));

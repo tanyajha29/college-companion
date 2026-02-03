@@ -4,6 +4,7 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ProfilePage() {
+  const API_BASE = (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
   const [profile, setProfile] = useState<any>(null);
   const [formData, setFormData] = useState<any>({
     username:"",
@@ -18,7 +19,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     axios
-      .get("http://localhost:5000/api/profile", {
+      .get(`${API_BASE}/api/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -36,7 +37,7 @@ export default function ProfilePage() {
   const handleSave = () => {
     const token = localStorage.getItem("token");
     axios
-      .put("http://localhost:5000/api/profile", formData, {
+      .put(`${API_BASE}/api/profile`, formData, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {

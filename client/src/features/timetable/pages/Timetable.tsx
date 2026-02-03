@@ -26,6 +26,7 @@ const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
 const times = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"];
 
 export default function Timetable() {
+    const API_BASE = (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
     const [entries, setEntries] = useState<TimetableEntry[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [editingEntry, setEditingEntry] = useState<TimetableEntry | null>(null);
@@ -51,7 +52,7 @@ export default function Timetable() {
         try {
             const token = localStorage.getItem("token");
             const [entriesRes] = await Promise.all([
-                axios.get("/api/timetable", { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${API_BASE}/api/timetable`, { headers: { Authorization: `Bearer ${token}` } }),
             ]);
             setEntries(entriesRes.data);
         } catch (err) {
@@ -125,9 +126,9 @@ export default function Timetable() {
         try {
             const token = localStorage.getItem("token");
             if (editingEntry) {
-                await axios.put(`/api/timetable/${editingEntry.timetable_id}`, payload, { headers: { Authorization: `Bearer ${token}` } });
+                await axios.put(`${API_BASE}/api/timetable/${editingEntry.timetable_id}`, payload, { headers: { Authorization: `Bearer ${token}` } });
             } else {
-                await axios.post("/api/timetable", payload, { headers: { Authorization: `Bearer ${token}` } });
+                await axios.post(`${API_BASE}/api/timetable`, payload, { headers: { Authorization: `Bearer ${token}` } });
             }
             setShowModal(false);
             await fetchData();
@@ -140,7 +141,7 @@ export default function Timetable() {
     const handleDelete = async (id: number) => {
         if (!canEdit || !window.confirm("Are you sure?")) return;
         try {
-            await axios.delete(`/api/timetable/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
+            await axios.delete(`${API_BASE}/api/timetable/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
             setEntries(prev => prev.filter(e => e.timetable_id !== id));
         } catch (err) {
             console.error("Failed to delete session:", err);

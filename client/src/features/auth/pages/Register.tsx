@@ -4,6 +4,7 @@ import OTPInput from "../components/OTPInput";
 
 export default function Register() {
   const nav = useNavigate();
+  const API_BASE = (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
   
   // STATE VARIABLES
   const [rollNumber, setRollNumber] = useState("");
@@ -18,6 +19,7 @@ export default function Register() {
   const [departmentId, setDepartmentId] = useState("1"); 
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [channel, setChannel] = useState("email");
 
   // OTP Verification Flow
   const [step, setStep] = useState<"register" | "verify">("register");
@@ -65,6 +67,7 @@ export default function Register() {
         password: pwd,
         contact_no,
         role: dbRole,
+        channel,
       };
 
       if (role !== 'admin') {
@@ -82,7 +85,7 @@ export default function Register() {
       }
 
       // Request registration OTP
-      const res = await fetch("http://localhost:5000/api/auth/request-registration", {
+      const res = await fetch(`${API_BASE}/api/auth/request-registration`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -117,7 +120,7 @@ export default function Register() {
 
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/api/auth/verify-registration", {
+      const res = await fetch(`${API_BASE}/api/auth/verify-registration`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp }),
@@ -128,7 +131,8 @@ export default function Register() {
         throw new Error(data.message || "OTP verification failed");
       }
 
-      // Store user data and redirect to login
+      // Store user data and token in localStorage
+      localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.user.role);
       localStorage.setItem("email", data.user.email);
       
@@ -136,7 +140,8 @@ export default function Register() {
         localStorage.setItem("departmentId", departmentId);
       }
 
-      nav("/login");
+      // Redirect to home or dashboard
+      nav("/");
     } catch (error: any) {
       setErr(error.message);
     } finally {
@@ -150,7 +155,7 @@ export default function Register() {
 
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/api/auth/resend-registration-otp", {
+      const res = await fetch(`${API_BASE}/api/auth/resend-registration-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -267,6 +272,20 @@ export default function Register() {
                 onChange={(e) => setContact(e.target.value)}
                 placeholder="+91 9876543210"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                MFA Channel
+              </label>
+              <select
+                className="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={channel}
+                onChange={(e) => setChannel(e.target.value)}
+              >
+                <option value="email">Email</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">SMS coming soon.</p>
             </div>
 
             <div>

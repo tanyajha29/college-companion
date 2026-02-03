@@ -44,21 +44,21 @@ export default function Navbar() {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-3 relative">
           <Link
-            to="/Timetable"
+            to="/timetable"
             className="flex items-center gap-1 px-3 py-1 rounded-full border border-white hover:bg-white hover:text-blue-600 transition"
           >
             <Calendar size={18} /> Timetable
           </Link>
 
           <Link
-            to="/Attendance"
+            to="/attendance"
             className="flex items-center gap-1 px-3 py-1 rounded-full border border-white hover:bg-white hover:text-blue-600 transition"
           >
             <CheckSquare size={18} /> Attendance
           </Link>
 
           <Link
-            to="/Reminders"
+            to="/reminders"
             className="flex items-center gap-1 px-3 py-1 rounded-full border border-white hover:bg-white hover:text-blue-600 transition"
           >
             <Bell size={18} /> Reminders
@@ -71,7 +71,7 @@ export default function Navbar() {
 </Link>
 
           <Link
-            to="/Profile"
+            to="/profile"
             className="flex items-center gap-1 px-3 py-1 rounded-full border border-white hover:bg-white hover:text-blue-600 transition"
           >
             
@@ -104,7 +104,7 @@ export default function Navbar() {
                   <Shield size={16} />Dashboard
                 </Link>
                 <Link
-                  to="/Login"
+                  to="/login"
                   className="flex items-center gap-2 px-4 py-2 hover:bg-blue-100"
                   onClick={() => setMenuOpen(false)}
                 >
@@ -135,21 +135,21 @@ export default function Navbar() {
             <Calendar size={16} className="inline mr-2" /> Timetable
           </Link>
           <Link
-            to="/Attendance"
+            to="/attendance"
             className="block px-6 py-2 hover:bg-blue-100"
             onClick={() => setMobileOpen(false)}
           >
             <CheckSquare size={16} className="inline mr-2" /> Attendance
           </Link>
           <Link
-            to="/Reminders"
+            to="/reminders"
             className="block px-6 py-2 hover:bg-blue-100"
             onClick={() => setMobileOpen(false)}
           >
             <Bell size={16} className="inline mr-2" /> Reminders
           </Link>
           <Link
-            to="/Profile"
+            to="/profile"
             className="block px-6 py-2 hover:bg-blue-100"
             onClick={() => setMobileOpen(false)}
           >
@@ -172,7 +172,7 @@ export default function Navbar() {
             <Shield size={16} className="inline mr-2" /> Dashboard
           </Link>
           <Link
-            to="/Login"
+            to="/login"
             className="block px-6 py-2 hover:bg-blue-100"
             onClick={() => setMobileOpen(false)}
           >
