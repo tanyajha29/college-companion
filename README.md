@@ -1,113 +1,133 @@
-# 🎓 College Portal Management System
+# College Companion
 
-## Project Overview
+A feature-rich, role-based college management portal with dashboards for students, faculty/staff, and administrators. It includes secure MFA authentication, attendance tracking, placement support, AI-assisted tools, document vault, fee payments, and real-time notifications.
 
-The College Portal Management System is a comprehensive, role-based web application designed to streamline academic, administrative, and student life within a college setting. It provides dedicated dashboards for **Students, Faculty/Staff, and Administrators**, focusing on features like user management, attendance tracking, and student placement assistance.
+## Features
 
-The application is built using a modern **MERN stack-like architecture** (React/Vite Frontend, Node.js/Express Backend, and PostgreSQL Database).
+- Role-based access control for Admin, Faculty/Staff, and Students.
+- MFA with email OTP (Redis-backed TTL).
+- Security headers (Helmet), rate limiting, input validation, and audit logging.
+- Attendance tracker with predictive risk flags.
+- Placement tracker with resume compatibility scoring (OpenAI).
+- FAQ chatbot and sentiment analysis for feedback.
+- CBCS elective selection with timetable clash detection.
+- Document vault via S3 with admin verification.
+- Fee payments using Razorpay (sandbox) plus PDF receipts.
+- Real-time notifications via Socket.io.
 
-## ✨ Key Features
+## Tech Stack
 
-### 💻 User Management & Security
+- Frontend: React + Vite, TypeScript, Tailwind CSS, Framer Motion
+- Backend: Node.js + Express
+- Database: PostgreSQL
+- Cache/OTP: Redis
+- Files: AWS S3
+- Payments: Razorpay (test mode)
+- AI: OpenAI Responses API
 
-  * **Role-Based Access Control (RBAC):** Separate experiences and access permissions for Admin, Faculty/Staff, and Students.
-  * **Secure Authentication:** User registration and login protected by **Bcrypt** password hashing and **JWT** (JSON Web Tokens).
-  * **Robust Validation:** Comprehensive server-side validation ensures data integrity, including checks for existing usernames/emails and valid department/division IDs.
+## Project Structure (Feature-based)
 
-### 📊 Dashboard & Tracking Modules
+```
+client/
+  src/
+    features/
+    shared/
+server/
+  src/
+    features/
+    shared/
+    config/
+    db/
+```
 
-  * **Dedicated Dashboards:** Separate landing pages for each role (Admin, Student, Staff).
-  * **Attendance Tracker:** Allows Faculty/Staff to mark attendance for specific sessions and lets Students view their personalized attendance summary.
-  * **Upcoming Tasks/Deadlines:** A core feature on the student dashboard showing upcoming assignments, exams, and important dates (REQ-8).
-  * **Placement Tracker (Planned):** A dedicated module (summarized on the dashboard) for students to log and track their job/internship applications, interviews, and offer status (REQ-10, REQ-11).
+## Local Development (Docker)
 
-### ⚙️ Administrative Tools
+1. Set environment variables:
+   - `server/.env` for backend (Postgres, Redis, SMTP, S3, Razorpay, OpenAI).
+   - `client/.env` for frontend (`VITE_API_URL`).
 
-  * **User Management:** (Admin Only) Tools for managing and assigning roles to users.
-  * **Department Management:** (Admin Only) Tools for managing academic departments and divisions.
-  * **Reports Dashboard:** (Admin Only) Provides data visualization and reports on key metrics (e.g., overall attendance trends).
+2. Start the stack:
+   ```bash
+   docker compose up --build
+   ```
 
-## 🚀 Technology Stack
+3. Apply migrations:
+   ```bash
+   docker compose exec server npm run migrate
+   ```
 
-| Component | Technology | Description |
-| :--- | :--- | :--- |
-| **Frontend** | **React** (with Vite), **TypeScript** | Fast, modern interface development. |
-| **Styling** | **Tailwind CSS** | Utility-first framework for rapid, consistent styling (Dark Theme focused). |
-| **Animations** | **Framer Motion** | Used for smooth transitions and modern UI effects. |
-| **Backend** | **Node.js** with **Express.js** | Robust RESTful API server. |
-| **Database** | **PostgreSQL** (via `pg` pool) | Reliable, relational database for structured academic data. |
-| **Security** | **Bcrypt.js**, **jsonwebtoken** | Industry-standard security for passwords and session management. |
+## Local Development (Without Docker)
 
-## 🛠️ Installation and Setup
+Backend:
+```bash
+cd server
+npm install
+npm run dev
+```
 
-### Prerequisites
+Frontend:
+```bash
+cd client
+npm install
+npm run dev
+```
 
-You must have the following installed on your system:
+## Environment Variables (Backend)
 
-  * Node.js (v16+)
-  * npm or yarn
-  * PostgreSQL database instance
+Required:
+- `PORT`
+- `JWT_SECRET`
+- `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_NAME`
+- `REDIS_URL`
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
+- `AWS_REGION`, `AWS_S3_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+- `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
+- `OPENAI_API_KEY`, `OPENAI_MODEL`
 
-### 1\. Database Setup
+Optional:
+- `CLIENT_ORIGIN`
 
-1.  Create a new PostgreSQL database (e.g., `college_portal_db`).
-2.  Set up your database tables (`USER`, `STUDENT`, `FACULTY`, `DEPARTMENT`, `DIVISION`, etc.). *(Note: You may need to provide the SQL schema here).*
+## Demo Data (for screenshots)
 
-### 2\. Backend Setup (`/server` directory)
+Seed file:
+```
+server/src/seeds/demo_data.sql
+```
 
-1.  Navigate to your server directory:
-    ```bash
-    cd server
-    ```
-2.  Install dependencies:
-    ```bash
-    npm install
-    ```
-3.  Create a `.env` file in the `/server` directory and add your configuration:
-    ```env
-    PORT=5000
-    JWT_SECRET=YOUR_VERY_STRONG_SECRET_KEY
-    # PostgreSQL Connection Details
-    DB_USER=your_db_user
-    DB_HOST=localhost
-    DB_DATABASE=college_companion
-    DB_PASSWORD=your_db_password
-    DB_PORT=5432
-    ```
-4.  Start the backend server:
-    ```bash
-    npm start # or node server.js
-    ```
+Import the base schema and demo seed:
+```bash
+# Import base schema (db dump)
+docker compose exec db psql -U postgres -d college_companion -f /tmp/college_database
 
-### 3\. Frontend Setup (`/client` directory)
+# Copy and import demo seed data
+docker cp server/src/seeds/demo_data.sql <DB_CONTAINER_ID>:/tmp/demo_data.sql
+docker compose exec db psql -U postgres -d college_companion -f /tmp/demo_data.sql
+```
 
-1.  Navigate to your client directory:
-    ```bash
-    cd client
-    ```
-2.  Install dependencies:
-    ```bash
-    npm install
-    ```
-3.  Create a `.env` file in the `/client` directory (for Vite configuration):
-    ```env
-    VITE_API_BASE_URL=http://localhost:5000/api
-    ```
-4.  Start the frontend application:
-    ```bash
-    npm run dev
-    ```
+If you are using Git Bash on Windows, prefix commands with:
+```
+MSYS_NO_PATHCONV=1
+```
 
-The application should now be running in your browser, typically at `http://localhost:5173`.
+## Dummy Accounts
 
-## 🤝 Contribution
+Password for demo users: `Password@123`
+- `admin@college.local`
+- `faculty@college.local`
+- `student1@college.local`
+- `student2@college.local`
 
-If you would like to contribute, please feel free to fork the repository and submit a pull request.
+## Screenshots
 
-## 📄 License
+Add screenshots here:
+- `docs/screenshots/` (optional)
 
-This project is licensed under the MIT License. 
+## Troubleshooting
 
------
+- `EAI_AGAIN db`: Ensure Docker DNS is ready and `DB_HOST=db`.
+- `jwt malformed`: Clear localStorage and log in again.
+- S3 CORS errors: Add bucket CORS allowing `http://localhost:5173`.
 
-**Developed by: tanyajha29**
+## License
+
+MIT
