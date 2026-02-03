@@ -132,3 +132,39 @@
   background-color: #0a0d1f;
   color: #fff;
 }
+
+.glow-nav {
+  background: rgba(13, 16, 36, 0.82);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    0 12px 40px rgba(2, 6, 23, 0.6),
+    0 0 25px rgba(59, 130, 246, 0.18);
+}
+
+.glow-pill {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.02);
+  color: #e2e8f0;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.glow-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(96, 165, 250, 0.6);
+}
+
+.hero-hue {
+  animation: hero-hue 10s linear infinite;
+}
+
+@keyframes hero-hue {
+  from {
+    filter: hue-rotate(0deg) saturate(1.05);
+  }
+  to {
+    filter: hue-rotate(360deg) saturate(1.05);
+  }
+}
