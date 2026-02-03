@@ -19,12 +19,19 @@ const pool = new pg.Pool({
 
 async function applyMigration() {
   try {
-    const sqlFile = path.join(__dirname, 'src', 'migrations', '002_create_pending_verifications.sql');
-    const sql = fs.readFileSync(sqlFile, 'utf-8');
-    
-    console.log('Applying migration: 002_create_pending_verifications.sql');
-    await pool.query(sql);
-    console.log('✅ Migration applied successfully!');
+    const migrationsDir = path.join(__dirname, 'src', 'migrations');
+    const files = fs.readdirSync(migrationsDir)
+      .filter((f) => f.endsWith('.sql'))
+      .sort();
+
+    for (const file of files) {
+      const sqlFile = path.join(migrationsDir, file);
+      const sql = fs.readFileSync(sqlFile, 'utf-8');
+      console.log(`Applying migration: ${file}`);
+      await pool.query(sql);
+    }
+
+    console.log('✅ All migrations applied successfully!');
     process.exit(0);
   } catch (err) {
     console.error('❌ Migration failed:', err);
