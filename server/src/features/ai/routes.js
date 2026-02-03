@@ -27,6 +27,8 @@ const safeJsonParse = (text) => {
 };
 
 const callOllama = async (prompt) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60000);
   const response = await fetch(`${env.ollama.url}/api/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -35,7 +37,9 @@ const callOllama = async (prompt) => {
       prompt,
       stream: false,
     }),
+    signal: controller.signal,
   });
+  clearTimeout(timeout);
   if (!response.ok) {
     const err = await response.text();
     throw new Error(`Ollama error: ${err}`);
