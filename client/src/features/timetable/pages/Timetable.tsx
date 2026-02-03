@@ -170,9 +170,11 @@ export default function Timetable() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white p-6 sm:p-10">
+        <div className="glow-page min-h-screen p-6 sm:p-10">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold flex items-center gap-2 pt-12"><CalendarDays /> Timetable</h1>
+                <h1 className="page-title text-3xl font-bold flex items-center gap-2 pt-12">
+                    <CalendarDays className="text-blue-400" /> Timetable
+                </h1>
                 {canEdit && (
                     <button onClick={() => openModal()} className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 hover:bg-blue-700 transition">
                         <Plus size={20} /> Add Session
@@ -180,12 +182,12 @@ export default function Timetable() {
                 )}
             </div>
 
-            <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow">
+            <div className="glow-card overflow-x-auto rounded-3xl shadow-2xl">
                 <table className="w-full border-collapse">
                     <thead>
-                        <tr className="bg-gray-100 dark:bg-gray-700">
-                            <th className="p-2 border-b dark:border-gray-600 w-24 text-sm font-medium">Time</th>
-                            {days.map(day => <th key={day} className="p-2 border-b dark:border-gray-600 text-sm font-medium">{day}</th>)}
+                        <tr className="bg-white/5">
+                            <th className="p-2 border-b border-white/10 w-24 text-sm font-medium">Time</th>
+                            {days.map(day => <th key={day} className="p-2 border-b border-white/10 text-sm font-medium">{day}</th>)}
                         </tr>
                     </thead>
                     <tbody>
@@ -199,10 +201,10 @@ export default function Timetable() {
                             </tr>
                         ) : (
                             times.map(time => (
-                                <tr key={time} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                    <td className="p-2 border-t dark:border-gray-600 font-mono text-center text-xs">{time}</td>
+                                <tr key={time} className="hover:bg-white/5">
+                                    <td className="p-2 border-t border-white/10 font-mono text-center text-xs">{time}</td>
                                     {days.map(day => (
-                                        <td key={day} className="p-1 border dark:border-gray-700 h-24 w-40 align-top">
+                                        <td key={day} className="p-1 border border-white/10 h-24 w-40 align-top">
                                             {renderSessionSlot(day, time)}
                                         </td>
                                     ))}
@@ -216,7 +218,7 @@ export default function Timetable() {
             <AnimatePresence>
                 {showModal && canEdit && (
                     <motion.div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <motion.div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border dark:border-gray-700" initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}>
+                        <motion.div className="glow-card p-8 rounded-3xl shadow-2xl w-full max-w-md" initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}>
                             <h2 className="text-2xl font-extrabold text-blue-600 dark:text-blue-400 mb-6 flex items-center gap-2">
                                 {editingEntry ? <Edit size={24} /> : <Plus size={24} />}
                                 {editingEntry ? "Edit Session" : "Add New Session"}
@@ -227,7 +229,7 @@ export default function Timetable() {
                                 {/* ✅ FIX: Day of Week Dropdown */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Day</label>
-                                    <select value={form.day} onChange={e => setForm({ ...form, day: e.target.value })} className="w-full border-0 rounded-lg p-3 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500">
+                                    <select value={form.day} onChange={e => setForm({ ...form, day: e.target.value })} className="w-full border-0 rounded-xl p-3 bg-transparent focus:ring-2 focus:ring-blue-500">
                                         {days.map(day => <option key={day} value={day}>{day}</option>)}
                                     </select>
                                 </div>
@@ -236,39 +238,39 @@ export default function Timetable() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-400 mb-1">Start Time</label>
-                                        <select value={form.starttime} onChange={e => setForm({ ...form, starttime: e.target.value })} className="w-full border-0 rounded-lg p-3 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500">
+                                        <select value={form.starttime} onChange={e => setForm({ ...form, starttime: e.target.value })} className="w-full border-0 rounded-xl p-3 bg-transparent focus:ring-2 focus:ring-blue-500">
                                             {times.map(time => <option key={time} value={time}>{time}</option>)}
                                         </select>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-400 mb-1">End Time</label>
-                                        <select value={form.endtime} onChange={e => setForm({ ...form, endtime: e.target.value })} className="w-full border-0 rounded-lg p-3 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500">
+                                        <select value={form.endtime} onChange={e => setForm({ ...form, endtime: e.target.value })} className="w-full border-0 rounded-xl p-3 bg-transparent focus:ring-2 focus:ring-blue-500">
                                             {times.map(time => <option key={time} value={time}>{time}</option>)}
                                         </select>
                                     </div>
                                 </div>
                                 
                                 {/* Department Dropdown */}
-                                <select value={selectedDepartment} onChange={e => setSelectedDepartment(e.target.value)} className="w-full border-0 rounded-lg p-3 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500">
+                                <select value={selectedDepartment} onChange={e => setSelectedDepartment(e.target.value)} className="w-full border-0 rounded-xl p-3 bg-transparent focus:ring-2 focus:ring-blue-500">
                                     {Object.keys(departmentCourses).map(dept => <option key={dept} value={dept}>{dept}</option>)}
                                 </select>
 
                                 {/* Dynamic Subject Dropdown */}
-                                <select value={form.courseid} onChange={e => setForm({ ...form, courseid: parseInt(e.target.value) || 0 })} className="w-full border-0 rounded-lg p-3 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500">
+                                <select value={form.courseid} onChange={e => setForm({ ...form, courseid: parseInt(e.target.value) || 0 })} className="w-full border-0 rounded-xl p-3 bg-transparent focus:ring-2 focus:ring-blue-500">
                                     <option value={0} disabled>Select Subject</option>
                                     {departmentCourses[selectedDepartment].map(course => <option key={course.id} value={course.id}>{course.name}</option>)}
                                 </select>
 
                                 {/* Division Dropdown */}
-                                <select value={form.division} onChange={e => setForm({ ...form, division: e.target.value })} className="w-full border-0 rounded-lg p-3 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500">
+                                <select value={form.division} onChange={e => setForm({ ...form, division: e.target.value })} className="w-full border-0 rounded-xl p-3 bg-transparent focus:ring-2 focus:ring-blue-500">
                                     {divisions.map(div => <option key={div} value={div}>Division {div}</option>)}
                                 </select>
 
                                 {/* Room No Input */}
-                                <input type="text" placeholder="Room No (e.g., L-101)" value={form.roomno} onChange={e => setForm({ ...form, roomno: e.target.value })} className="w-full border-0 rounded-lg p-3 bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500" />
+                                <input type="text" placeholder="Room No (e.g., L-101)" value={form.roomno} onChange={e => setForm({ ...form, roomno: e.target.value })} className="w-full border-0 rounded-xl p-3 bg-transparent placeholder-gray-400 focus:ring-2 focus:ring-blue-500" />
 
                                 {/* Faculty ID Input */}
-                                <input type="number" placeholder="Faculty ID" value={form.facultyid || ''} onChange={e => setForm({ ...form, facultyid: parseInt(e.target.value) || 0 })} className="w-full border-0 rounded-lg p-3 bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500" />
+                                <input type="number" placeholder="Faculty ID" value={form.facultyid || ''} onChange={e => setForm({ ...form, facultyid: parseInt(e.target.value) || 0 })} className="w-full border-0 rounded-xl p-3 bg-transparent placeholder-gray-400 focus:ring-2 focus:ring-blue-500" />
                             </div>
 
                             <div className="flex justify-end space-x-3 pt-6">

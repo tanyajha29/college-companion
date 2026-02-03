@@ -228,7 +228,7 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({ onAdd }) => {
                     </div>
                     
                     <div>
-                        <label htmlFor="stipend" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stipend (monthly) 💰</label>
+                        <label htmlFor="stipend" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stipend (monthly)</label>
                         <input
                             type="number"
                             name="stipend"
@@ -243,7 +243,7 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({ onAdd }) => {
                 
                 {/* Row 3: Interview Date */}
                 <div>
-                    <label htmlFor="nextinterviewdate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Next Interview Date/Time (Optional) 📅</label>
+                    <label htmlFor="nextinterviewdate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Next Interview Date/Time (Optional)</label>
                     <input
                         type="datetime-local" 
                         name="nextinterviewdate"
@@ -407,7 +407,7 @@ const ApplicationDetailsModal: React.FC<ApplicationDetailsModalProps> = ({ appli
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100 dark:border-gray-700"
+                className="glow-card rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden"
             >
                 {/* Modal Header */}
                 <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-start">
@@ -723,7 +723,7 @@ const InternshipTrackerPage: React.FC = () => {
     const [showScore, setShowScore] = useState(false);
     const [documents, setDocuments] = useState<any[]>([]);
 
-    const cardClasses = "bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-6 border border-gray-100 dark:border-gray-700";
+    const cardClasses = "glow-card shadow-2xl rounded-3xl p-6 border border-white/10";
 
     // Data Fetching (Read)
     const fetchApplications = useCallback(async () => {
@@ -831,8 +831,8 @@ const InternshipTrackerPage: React.FC = () => {
     }
 
     return (
-        <div className="relative min-h-screen bg-gray-100 dark:bg-gray-900 font-sans">
-            <div className="absolute inset-0 bg-gray-900/10 dark:bg-gray-900/90" />
+        <div className="glow-page relative min-h-screen font-sans">
+            <div className="absolute inset-0 bg-black/40" />
 
             <div className="relative z-10 p-4 sm:p-6 max-w-7xl mx-auto pt-10 pb-16"> 
                 
@@ -840,7 +840,7 @@ const InternshipTrackerPage: React.FC = () => {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="text-4xl sm:text-5xl font-extrabold text-center text-gray-900 dark:text-white drop-shadow-md mb-2 pt-12"
+                    className="page-title text-4xl sm:text-5xl font-extrabold text-center drop-shadow-md mb-2 pt-12"
                 >
                     Internship & Placement Tracker
                 </motion.h1>

@@ -68,7 +68,7 @@ export default function ProfilePage() {
     );
 
   return (
-    <div className="min-h-screen bg-[#0a0d1f] text-white px-6 py-14">
+    <div className="glow-page min-h-screen text-white px-6 py-14">
       <header className="text-center mb-10">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
           My Profile
@@ -78,21 +78,21 @@ export default function ProfilePage() {
         </p>
       </header>
 
-      {/* 🔥 MAGIC BORDER CONTAINER */}
+      {/* Magic border container */}
       <motion.div
         initial={{ opacity: 0, y: 25 }}
         animate={{ opacity: 1, y: 0 }}
         className="profile-glow max-w-3xl mx-auto"
       >
-        {/* CONTENT LAYER */}
-        <div className="relative z-10 p-8 rounded-3xl border border-white/10">
+        {/* Content layer */}
+        <div className="profile-glow__content relative z-10 p-8 rounded-3xl border border-white/10">
           {/* Header */}
           <div className="flex flex-col sm:flex-row items-center gap-6 border-b border-white/10 pb-6 mb-6">
             {/* Avatar */}
             <div className="relative">
               <div className="w-28 h-28 rounded-full flex items-center justify-center 
                               bg-gradient-to-br from-blue-500/20 to-purple-500/20 
-                              border border-blue-400/40 shadow-[0_0_25px_rgba(96,165,250,0.35)]">
+                              border border-blue-400/40 shadow-[0_0_28px_rgba(96,165,250,0.45)]">
                 <User size={46} className="text-blue-400" />
               </div>
 
@@ -160,7 +160,7 @@ export default function ProfilePage() {
   );
 }
 
-/* 🔹 Field Component */
+/* Field Component */
 function Field({ icon, label, value, name, isEditing, onChange }: any) {
   return (
     <div className="flex flex-col sm:flex-row gap-3 border-b border-white/10 pb-3">

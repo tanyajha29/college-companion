@@ -57,7 +57,7 @@ export default function Dashboard() {
                 content = role === "admin" ? (
                     <AdminUserManagement /> // ADMIN COMPONENT
                 ) : (
-                    <div className="text-red-500 font-medium">❌ Access Denied: Administrator role required.</div>
+                    <div className="text-red-500 font-medium">Access Denied: Administrator role required.</div>
                 );
                 break;
     
@@ -66,7 +66,7 @@ export default function Dashboard() {
                    
                     <AdminDepartmentManagement /> 
                 ) : (
-                    <div className="text-red-500 font-medium">❌ Access Denied: Administrator role required.</div>
+                    <div className="text-red-500 font-medium">Access Denied: Administrator role required.</div>
                 );
                 break;
     
@@ -75,7 +75,7 @@ export default function Dashboard() {
                     // Placeholder for now
                     <AdminReportDashboard />
                 ) : (
-                    <div className="text-red-500 font-medium">❌ Access Denied: Administrator role required.</div>
+                    <div className="text-red-500 font-medium">Access Denied: Administrator role required.</div>
                 );
                 break;
     
@@ -97,7 +97,7 @@ export default function Dashboard() {
     return (
         <>
             {/* Contextual Header */}
-            <h1 className="text-3xl font-extrabold text-blue-600 dark:text-blue-400 border-b pb-4 mb-6 border-gray-200 dark:border-gray-700 transition-colors duration-500">{title}</h1>
+            <h1 className="page-title text-3xl font-extrabold border-b pb-4 mb-6 border-white/10 transition-colors duration-500">{title}</h1>
             <div className="pt-3">
                 {content}
             </div>
@@ -123,7 +123,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-500">
+    <div className="glow-page flex min-h-screen transition-colors duration-500">
       {/* Sidebar */}
       <aside className="w-64 bg-gray-800 p-6 shadow-2xl dark:shadow-gray-950/50 text-white flex flex-col transition-colors duration-500">
         
@@ -181,7 +181,7 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
           
-          className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl dark:shadow-gray-950/70 h-full border border-gray-100 dark:border-gray-700 text-gray-900 dark:text-white transition-colors duration-500"
+          className="glow-card p-8 rounded-3xl shadow-2xl h-full text-white transition-colors duration-500"
 >
           {renderSectionContent()}
         </motion.div>

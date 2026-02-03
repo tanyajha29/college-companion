@@ -148,7 +148,7 @@ export default function ReminderComponent() {
 
   const DepartmentSelect: React.FC = () => (
     <select
-      className="border rounded-lg p-2 bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+      className="rounded-xl p-2 bg-transparent focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150"
       value={form.department}
       onChange={(e) => setForm({ ...form, department: e.target.value as Department })}
     >
@@ -162,7 +162,7 @@ export default function ReminderComponent() {
 
   const DivisionSelect: React.FC = () => (
     <select
-      className="border rounded-lg p-2 bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+      className="rounded-xl p-2 bg-transparent focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150"
       value={form.division}
       onChange={(e) => setForm({ ...form, division: e.target.value as Division })}
     >
@@ -175,16 +175,16 @@ export default function ReminderComponent() {
 
   const ReminderItem: React.FC<{ r: Reminder }> = ({ r }) => (
     <div
-      className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-4 rounded-xl shadow-lg flex justify-between items-start border-l-4 border-blue-500 hover:shadow-xl transform hover:scale-[1.01] transition duration-300 ease-in-out animate-fadeIn"
+      className="glow-card text-white p-4 rounded-3xl shadow-lg flex justify-between items-start border-l-4 border-blue-500 hover:shadow-xl transform hover:scale-[1.01] transition duration-300 ease-in-out animate-fadeIn"
     >
       <div className="flex-grow">
         <h3 className="font-bold text-lg text-blue-700 dark:text-blue-400 mb-1 leading-tight">{r.title}</h3>
         <p className="text-xs font-medium text-blue-500 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 px-2 py-0.5 rounded-full inline-block mb-2">
           {r.department} / {r.division}
         </p>
-        <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">📅 **Due:** {r.date}</p>
+        <p className="text-sm text-gray-300 mb-1">Due: {r.date}</p>
         {r.note && (
-          <p className="text-sm italic text-gray-600 dark:text-gray-400 border-l-2 pl-2 mt-2 border-gray-300 dark:border-gray-600">
+          <p className="text-sm italic text-gray-300 border-l-2 pl-2 mt-2 border-white/10">
             {r.note}
           </p>
         )}
@@ -204,7 +204,7 @@ export default function ReminderComponent() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-500 p-6 sm:p-10">
+    <div className="glow-page min-h-screen transition-colors duration-500 p-6 sm:p-10">
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
@@ -216,24 +216,24 @@ export default function ReminderComponent() {
       `}</style>
       
       <header className="max-w-4xl mx-auto mb-10 text-center">
-        <h1 className="text-4xl font-extrabold text-blue-600 dark:text-blue-400 mb-2 transition-colors duration-500 pt-12">
-          <span className="inline-block animate-pulse mr-2 "></span> Academic Reminders
+        <h1 className="page-title text-4xl font-extrabold mb-2 transition-colors duration-500 pt-12">
+          Academic Reminders
         </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-400">
-          Viewing reminders for **{user.role.toUpperCase()}** (Dept: **{user.department}**, Div: **{user.division}**)
+        <p className="text-lg text-gray-300">
+          Viewing reminders for {user.role.toUpperCase()} (Dept: {user.department}, Div: {user.division})
         </p>
       </header>
 
       {/* --- ADD REMINDER FORM (STAFF/ADMIN ONLY) --- */}
       {isEditable && (
-        <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-6 rounded-2xl shadow-2xl max-w-lg mx-auto mb-10 transform transition duration-300 hover:shadow-blue-500/50">
-          <h2 className="text-xl font-bold text-blue-600 dark:text-blue-400 mb-4 border-b pb-2 border-gray-200 dark:border-gray-700">
+        <div className="glow-card text-white p-6 rounded-3xl shadow-2xl max-w-lg mx-auto mb-10 transform transition duration-300 hover:shadow-blue-500/50">
+          <h2 className="text-xl font-bold text-blue-300 mb-4 border-b pb-2 border-white/10">
             Create New Reminder
           </h2>
           <form onSubmit={addReminder} className="grid gap-4">
             <input
               placeholder="Reminder Title (e.g., Mid-Term Dates)"
-              className="border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+              className="rounded-xl p-3 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-transparent"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               required
@@ -241,7 +241,7 @@ export default function ReminderComponent() {
             <div className="grid grid-cols-2 gap-3">
                 <input
                     type="date"
-                    className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                    className="rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-transparent"
                     value={form.date}
                     onChange={(e) => setForm({ ...form, date: e.target.value })}
                     required
@@ -254,7 +254,7 @@ export default function ReminderComponent() {
             <textarea
               placeholder="Detailed Notes (optional)"
               rows={3}
-              className="border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+              className="rounded-xl p-3 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-transparent"
               value={form.note}
               onChange={(e) => setForm({ ...form, note: e.target.value })}
             />
@@ -262,7 +262,7 @@ export default function ReminderComponent() {
               type="submit"
               className="bg-blue-600 text-white py-3 rounded-xl font-semibold text-lg hover:bg-blue-700 transition duration-200 transform hover:scale-[1.01] shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-300"
             >
-              ➕ Publish Reminder
+              Publish Reminder
             </button>
           </form>
         </div>
@@ -270,17 +270,17 @@ export default function ReminderComponent() {
 
       {/* --- REMINDER LIST --- */}
       <main className="max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-6">
+        <h2 className="page-title text-2xl font-bold mb-6">
           {user.role === 'student' ? "Your Relevant Reminders" : "All System Reminders"}
         </h2>
         
         {isLoading ? (
             <p className="text-center text-xl text-blue-400 dark:text-blue-300 animate-bounce pt-10">Loading reminders...</p>
         ) : reminders.length === 0 ? ( // Display based on the fetched/filtered list
-          <div className="text-center p-10 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
-            <p className="text-xl text-gray-500 dark:text-gray-400">
+          <div className="glow-card text-center p-10 rounded-3xl shadow-lg">
+            <p className="text-xl text-gray-300">
               {user.role === 'student' ? 
-                "🎉 No reminders for your department/division yet. Check back later!" : 
+                "No reminders for your department/division yet. Check back later!" : 
                 "No system reminders have been added."
               }
             </p>

@@ -3,12 +3,20 @@
 @tailwind utilities;
 /* ================= MAGIC GLOW BORDER ================= */
 
+.glow-card,
 .profile-glow {
   position: relative;
   border-radius: 24px;
   overflow: hidden;
+  transition: filter 0.3s ease;
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow:
+    0 30px 80px rgba(2, 6, 23, 0.65),
+    0 0 40px rgba(59, 130, 246, 0.18);
 }
 
+.glow-card::before,
 .profile-glow::before {
   content: "";
   position: absolute;
@@ -35,6 +43,7 @@
   z-index: 0;
 }
 
+.glow-card::after,
 .profile-glow::after {
   content: "";
   position: absolute;
@@ -42,7 +51,31 @@
   border-radius: inherit;
   background: rgba(13, 16, 36, 0.92);
   backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   z-index: 0;
+}
+
+/* Inner glass layering */
+.profile-glow__content::after,
+.glow-card__inner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.02) 35%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.profile-glow__content > *,
+.glow-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 @keyframes profile-hue {
@@ -55,6 +88,47 @@
 }
 
 /* Hover boost */
-.profile-glow:hover::before {
+.profile-glow:hover,
+.glow-card:hover {
+  filter: brightness(1.05);
+}
+
+.profile-glow:hover::before,
+.glow-card:hover::before {
   filter: brightness(1.25);
+}
+
+/* Global page styles */
+.glow-page input,
+.glow-page select,
+.glow-page textarea {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.glow-page input::placeholder,
+.glow-page textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.glow-page input:focus,
+.glow-page select:focus,
+.glow-page textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.45);
+  border-color: rgba(59, 130, 246, 0.7);
+}
+
+.page-title {
+  background: linear-gradient(90deg, #60a5fa, #a855f7);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.glow-page {
+  background-color: #0a0d1f;
+  color: #fff;
 }

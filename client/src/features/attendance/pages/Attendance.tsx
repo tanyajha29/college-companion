@@ -43,9 +43,9 @@ export default function AttendancePage() {
     const API_BASE = (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
 
     return (
-        <div className="space-y-8 p-0 bg-gray-900 min-h-screen pt-10">
+        <div className="glow-page space-y-8 p-0 min-h-screen pt-10">
             <motion.header
-                className="text-3xl font-extrabold text-cyan-400 border-b border-gray-700 pb-3 bg-gray-800 shadow-xl p-6 sticky top-0 z-10"
+                className="page-title text-3xl font-extrabold border-b border-white/10 pb-3 bg-transparent shadow-xl p-6 sticky top-0 z-10"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -161,8 +161,8 @@ function MarkAttendance({ apiBase }: { apiBase: string }) {
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <form onSubmit={handleSubmit} className="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 space-y-6">
-                <h2 className="text-xl font-bold text-gray-100 border-b border-gray-700 pb-3">Mark Class Attendance</h2>
+            <form onSubmit={handleSubmit} className="glow-card p-6 rounded-3xl shadow-xl space-y-6">
+                <h2 className="text-xl font-bold text-blue-300 border-b border-white/10 pb-3">Mark Class Attendance</h2>
                 
                 {/* FILTERS */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -171,7 +171,7 @@ function MarkAttendance({ apiBase }: { apiBase: string }) {
                         <select 
                             onChange={(e) => setSelectedDepartment(e.target.value)} 
                             required 
-                            className="p-3 border border-gray-600 bg-gray-700 text-gray-100 rounded-lg shadow-inner focus:border-cyan-500"
+                            className="p-3 rounded-xl bg-transparent text-white shadow-inner focus:border-blue-500"
                         >
                             <option value="">-- Select Department --</option>
                             {departments.map(d => <option key={d.departmentid} value={d.departmentid}>{d.departmentname}</option>)}
@@ -182,7 +182,7 @@ function MarkAttendance({ apiBase }: { apiBase: string }) {
                         <select 
                             onChange={(e) => setSelectedYear(e.target.value)} 
                             required 
-                            className="p-3 border border-gray-600 bg-gray-700 text-gray-100 rounded-lg shadow-inner focus:border-cyan-500"
+                            className="p-3 rounded-xl bg-transparent text-white shadow-inner focus:border-blue-500"
                         >
                             <option value="">-- Select Year --</option>
                             <option value="1">First Year</option>
@@ -197,7 +197,7 @@ function MarkAttendance({ apiBase }: { apiBase: string }) {
                             onChange={(e) => setSelectedSession(e.target.value)} 
                             required 
                             disabled={!selectedDepartment || sessions.length === 0} 
-                            className="p-3 border border-gray-600 bg-gray-700 text-gray-100 rounded-lg shadow-inner disabled:bg-gray-700 disabled:text-gray-500 focus:border-cyan-500"
+                            className="p-3 rounded-xl bg-transparent text-white shadow-inner disabled:bg-transparent disabled:text-gray-500 focus:border-blue-500"
                         >
                             <option value="">-- Select Session --</option>
                             {sessions.map(s => <option key={s.sessionid} value={s.sessionid}>{s.subject_name} (Div: {s.divisionname})</option>)}
@@ -211,7 +211,7 @@ function MarkAttendance({ apiBase }: { apiBase: string }) {
                         value={attendanceDate} 
                         onChange={(e) => setAttendanceDate(e.target.value)} 
                         required 
-                        className="p-3 border border-gray-600 bg-gray-700 text-gray-100 rounded-lg shadow-inner focus:border-cyan-500" 
+                        className="p-3 rounded-xl bg-transparent text-white shadow-inner focus:border-blue-500" 
                     />
                 </div>
                 
@@ -222,8 +222,8 @@ function MarkAttendance({ apiBase }: { apiBase: string }) {
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border-t border-gray-700 pt-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {students.map(student => (
-                                    <div key={student.studentid} className="flex items-center justify-between p-3 border border-gray-600 rounded-lg bg-gray-700">
-                                        <p className="font-medium text-gray-100">{student.username} ({student.rollnumber})</p>
+                                    <div key={student.studentid} className="flex items-center justify-between p-3 border border-white/10 rounded-xl bg-white/5">
+                                        <p className="font-medium text-white">{student.username} ({student.rollnumber})</p>
                                         <div className="flex gap-2">
                                             <button 
                                                 type="button" 
@@ -246,7 +246,7 @@ function MarkAttendance({ apiBase }: { apiBase: string }) {
                             <button 
                                 type="submit" 
                                 disabled={isSubmitting} 
-                                className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg shadow-xl text-white font-medium bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 disabled:text-gray-400 transition"
+                                className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl shadow-xl text-white font-medium bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:text-gray-400 transition"
                             >
                                 {isSubmitting ? 'Submitting...' : <><Save size={20} /> Submit Attendance</>}
                             </button>
@@ -255,24 +255,24 @@ function MarkAttendance({ apiBase }: { apiBase: string }) {
                 </AnimatePresence>
             </form>
 
-            <div className="mt-8 bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700">
+            <div className="mt-8 glow-card p-6 rounded-3xl shadow-xl">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-gray-100">Predictive Attendance Risk</h3>
+                    <h3 className="text-lg font-bold text-blue-300">Predictive Attendance Risk</h3>
                     <button
                         type="button"
                         onClick={fetchRisk}
-                        className="px-4 py-2 rounded-lg bg-cyan-600 text-white hover:bg-cyan-700"
+                        className="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
                         disabled={riskLoading}
                     >
                         {riskLoading ? "Analyzing..." : "Run Analysis"}
                     </button>
                 </div>
                 {riskStudents.length === 0 ? (
-                    <p className="text-gray-400 text-sm">No at-risk students found yet.</p>
+                    <p className="text-gray-300 text-sm">No at-risk students found yet.</p>
                 ) : (
                     <div className="grid gap-3">
                         {riskStudents.map((s) => (
-                            <div key={s.studentid} className="p-3 bg-gray-700 rounded-lg text-sm text-gray-100">
+                            <div key={s.studentid} className="p-3 bg-white/5 rounded-xl text-sm text-white">
                                 <span className="font-semibold">{s.username}</span> — Recent: {s.recentRate}%,
                                 Overall: {s.overallRate}% {s.predictedBelow75 ? "⚠️" : ""}
                             </div>
@@ -303,9 +303,9 @@ function StudentAttendanceSummary({ apiBase }: { apiBase: string }) {
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h2 className="text-2xl font-bold text-gray-100 mb-6">My Attendance Summary</h2>
+            <h2 className="page-title text-2xl font-bold mb-6">My Attendance Summary</h2>
             {summary.length === 0 ? (
-                <div className="text-center py-12 text-xl text-gray-400 bg-gray-800 rounded-xl shadow-lg border border-dashed border-gray-700">
+                <div className="glow-card text-center py-12 text-xl text-gray-300 rounded-3xl shadow-lg border border-dashed border-white/10">
                     No attendance records found for you yet.
                 </div>
             ) : (
@@ -315,7 +315,7 @@ function StudentAttendanceSummary({ apiBase }: { apiBase: string }) {
                         return (
                             <motion.div
                                 key={subject.subject_name}
-                                className={`p-5 rounded-xl shadow-xl border-b-4 bg-gray-800 ${isSafe ? 'border-green-600' : 'border-red-600'}`}
+                                className={`glow-card p-5 rounded-3xl shadow-xl border-b-4 ${isSafe ? 'border-green-600' : 'border-red-600'}`}
                                 whileHover={{ scale: 1.03 }}
                             >
                                 <div className="flex items-center justify-between mb-4">
@@ -334,8 +334,8 @@ function StudentAttendanceSummary({ apiBase }: { apiBase: string }) {
                                     {subject.percentage}% Attendance ({subject.classes_attended}/{subject.total_classes})
                                 </p>
                                 {!isSafe && (
-                                    <p className="text-red-400 font-semibold mt-2 text-xs p-2 bg-gray-900 rounded-md border border-red-600">
-                                        ⚠️ Alert: Attendance is below the required threshold!
+                                    <p className="text-red-400 font-semibold mt-2 text-xs p-2 bg-black/30 rounded-md border border-red-600">
+                                        Alert: Attendance is below the required threshold!
                                     </p>
                                 )}
                             </motion.div>

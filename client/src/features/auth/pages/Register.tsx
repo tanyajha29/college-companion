@@ -190,45 +190,45 @@ export default function Register() {
   if (step === "register") {
     return (
       <div
-        className="relative min-h-screen flex items-center justify-center bg-cover bg-center pt-24" 
+        className="glow-page relative min-h-screen flex items-center justify-center bg-cover bg-center pt-24" 
         style={{ backgroundImage: "url('/login_register_bg.jpeg')" }}
       >
         <div className="absolute inset-0 bg-blue-900 bg-opacity-40 backdrop-blur-sm"></div>
 
-        <div className="relative w-full max-w-md p-8 rounded-2xl bg-white/90 backdrop-blur-lg shadow-2xl border border-white/40">
+        <div className="glow-card relative w-full max-w-md p-8 rounded-3xl shadow-2xl">
           {/* Tabs */}
-          <div className="flex justify-center mb-6 border-b">
+          <div className="flex justify-center mb-6 border-b border-white/10">
             <Link
               to="/login"
-              className="px-6 py-2 border-b-2 border-transparent text-gray-500 hover:text-blue-600"
+              className="px-6 py-2 border-b-2 border-transparent text-slate-300 hover:text-blue-300"
             >
               Login
             </Link>
             <Link
               to="/register"
-              className="px-6 py-2 border-b-2 border-blue-600 text-blue-600 font-semibold"
+              className="px-6 py-2 border-b-2 border-blue-400 text-blue-300 font-semibold"
             >
               Register
             </Link>
           </div>
 
-          <h2 className="text-2xl font-bold mb-2 text-center text-gray-800">
+          <h2 className="page-title text-2xl font-bold mb-2 text-center">
             Create Account
           </h2>
-          <p className="text-sm text-center text-gray-500 mb-6">
+          <p className="text-sm text-center text-slate-300 mb-6">
             Sign up to get started
           </p>
 
-          {err && <div className="mb-4 text-sm text-red-600">{err}</div>}
+          {err && <div className="mb-4 text-sm text-red-400">{err}</div>}
 
           <form onSubmit={onSubmit} className="space-y-4 max-h-96 overflow-y-auto">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-slate-300">
                 Username
               </label>
               <input
                 type="text"
-                className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 w-full rounded-xl px-4 py-2 outline-none bg-transparent"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Your username"
@@ -236,12 +236,12 @@ export default function Register() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-slate-300">
                 Email
               </label>
               <input
                 type="email"
-                className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 w-full rounded-xl px-4 py-2 outline-none bg-transparent"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@college.edu"
@@ -249,12 +249,12 @@ export default function Register() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-slate-300">
                 Password
               </label>
               <input
                 type="password"
-                className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 w-full rounded-xl px-4 py-2 outline-none bg-transparent"
                 value={pwd}
                 onChange={(e) => setPwd(e.target.value)}
                 placeholder="••••••••"
@@ -262,12 +262,12 @@ export default function Register() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-slate-300">
                 Contact Number
               </label>
               <input
                 type="tel"
-                className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 w-full rounded-xl px-4 py-2 outline-none bg-transparent"
                 value={contact_no}
                 onChange={(e) => setContact(e.target.value)}
                 placeholder="+91 9876543210"
@@ -275,25 +275,25 @@ export default function Register() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-slate-300">
                 MFA Channel
               </label>
               <select
-                className="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 w-full rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-transparent"
                 value={channel}
                 onChange={(e) => setChannel(e.target.value)}
               >
                 <option value="email">Email</option>
               </select>
-              <p className="text-xs text-gray-500 mt-1">SMS coming soon.</p>
+              <p className="text-xs text-slate-400 mt-1">SMS coming soon.</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-slate-300">
                 User Type
               </label>
               <select
-                className="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 w-full rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-transparent"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
               >
@@ -305,11 +305,11 @@ export default function Register() {
 
             {role !== "admin" && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-slate-300">
                   Department
                 </label>
                 <select
-                  className="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 w-full rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-transparent"
                   value={departmentId}
                   onChange={(e) => setDepartmentId(e.target.value)}
                 >
@@ -324,12 +324,12 @@ export default function Register() {
             {role === "student" && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-slate-300">
                     Roll Number
                   </label>
                   <input
                     type="text"
-                    className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 w-full rounded-xl px-4 py-2 outline-none bg-transparent"
                     value={rollNumber}
                     onChange={(e) => setRollNumber(e.target.value)}
                     placeholder="Enter your roll number"
@@ -337,11 +337,11 @@ export default function Register() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-slate-300">
                     Year
                   </label>
                   <select
-                    className="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 w-full rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-transparent"
                     value={yearOfStudy}
                     onChange={(e) => setYearOfStudy(e.target.value)}
                   >
@@ -353,11 +353,11 @@ export default function Register() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-slate-300">
                     Division
                   </label>
                   <select
-                    className="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 w-full rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-transparent"
                     value={division}
                     onChange={(e) => setDivision(e.target.value)}
                   >
@@ -371,12 +371,12 @@ export default function Register() {
 
             {(role === "faculty" || role === "admin") && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-slate-300">
                   Designation/Title
                 </label>
                 <input
                   type="text"
-                  className="mt-1 w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 w-full rounded-xl px-4 py-2 outline-none bg-transparent"
                   value={designation}
                   onChange={(e) => setDesignation(e.target.value)}
                   placeholder="e.g., Professor, Lecturer"
@@ -400,20 +400,20 @@ export default function Register() {
   // Render OTP Verification Step
   return (
     <div
-      className="relative min-h-screen flex items-center justify-center bg-cover bg-center pt-24"
+      className="glow-page relative min-h-screen flex items-center justify-center bg-cover bg-center pt-24"
       style={{ backgroundImage: "url('/login_register_bg.jpeg')" }}
     >
       <div className="absolute inset-0 bg-blue-900 bg-opacity-40 backdrop-blur-sm"></div>
 
-      <div className="relative w-full max-w-md p-8 rounded-2xl bg-white/90 backdrop-blur-lg shadow-2xl border border-white/40">
-        <h2 className="text-2xl font-bold mb-2 text-center text-gray-800">
+      <div className="glow-card relative w-full max-w-md p-8 rounded-3xl shadow-2xl">
+        <h2 className="page-title text-2xl font-bold mb-2 text-center">
           Verify Your Email
         </h2>
-        <p className="text-sm text-center text-gray-500 mb-6">
+        <p className="text-sm text-center text-slate-300 mb-6">
           We sent a 6-digit code to <strong>{email}</strong>
         </p>
 
-        {err && <div className="mb-4 text-sm text-red-600">{err}</div>}
+        {err && <div className="mb-4 text-sm text-red-400">{err}</div>}
 
         <form onSubmit={handleOTPSubmit} className="space-y-6">
           <OTPInput 
@@ -433,15 +433,15 @@ export default function Register() {
           {/* Resend & Timer */}
           <div className="text-center space-y-2">
             {otpTimer > 0 ? (
-              <p className="text-sm text-gray-600">
-                Resend OTP in <span className="font-bold text-blue-600">{otpTimer}s</span>
+              <p className="text-sm text-slate-300">
+                Resend OTP in <span className="font-bold text-blue-400">{otpTimer}s</span>
               </p>
             ) : canResend ? (
               <button
                 type="button"
                 onClick={handleResendOTP}
                 disabled={loading}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
+                className="text-sm text-blue-400 hover:text-blue-300 font-medium disabled:opacity-50"
               >
                 Resend OTP
               </button>
@@ -452,7 +452,7 @@ export default function Register() {
           <button
             type="button"
             onClick={handleBackToRegister}
-            className="w-full text-center text-sm text-gray-600 hover:text-gray-800"
+            className="w-full text-center text-sm text-slate-300 hover:text-white"
           >
             ← Back to Registration
           </button>
