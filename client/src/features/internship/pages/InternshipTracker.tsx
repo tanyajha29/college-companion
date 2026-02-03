@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../../../shared/api";
 import { Plus, Upload, X, Clock, DollarSign, Calendar, Mail, Building, Briefcase, ChevronRight, Save, CornerUpLeft } from "lucide-react"; 
 import { motion, AnimatePresence } from "framer-motion";
 
 // --- Configuration ---
 const API_BASE = (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
-const API_BASE_URL = `${API_BASE}/api/internships`;
 
 // --- Interfaces ---
 
@@ -531,19 +532,12 @@ const UploadDocuments: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
 
         setUploadStatus('uploading');
         try {
-            const token = localStorage.getItem("token");
-            const presignRes = await fetch(`${API_BASE}/api/documents/presign`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ fileName: file.name, contentType: file.type, label: "Internship Document" }),
+            const presignRes = await api.post("/documents/presign", {
+                fileName: file.name,
+                contentType: file.type,
+                label: "Internship Document",
             });
-            const presignData = await presignRes.json();
-            if (!presignRes.ok) {
-                throw new Error(presignData.message || "Failed to get upload URL");
-            }
+            const presignData = presignRes.data;
 
             await fetch(presignData.uploadUrl, {
                 method: "PUT",
@@ -551,23 +545,12 @@ const UploadDocuments: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
                 body: file,
             });
 
-            const confirmRes = await fetch(`${API_BASE}/api/documents/confirm`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    key: presignData.key,
-                    fileName: file.name,
-                    mimeType: file.type,
-                    label: "Internship Document",
-                }),
+            await api.post("/documents/confirm", {
+                key: presignData.key,
+                fileName: file.name,
+                mimeType: file.type,
+                label: "Internship Document",
             });
-            const confirmData = await confirmRes.json();
-            if (!confirmRes.ok) {
-                throw new Error(confirmData.message || "Failed to confirm upload");
-            }
 
             setUploadStatus('success');
             setFile(null);
@@ -642,27 +625,29 @@ const UploadDocuments: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
 
 // --- 7. Resume Compatibility Scorer ---
 const ResumeScorer: React.FC = () => {
-    const API_BASE = (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
     const [resumeText, setResumeText] = useState("");
+    const [resumeFile, setResumeFile] = useState<File | null>(null);
     const [jobDescription, setJobDescription] = useState("");
     const [result, setResult] = useState<any>(null);
     const [loading, setLoading] = useState(false);
 
     const handleScore = async () => {
-        if (!resumeText.trim() || !jobDescription.trim()) return;
+        if ((!resumeText.trim() && !resumeFile) || !jobDescription.trim()) return;
         try {
             setLoading(true);
-            const token = localStorage.getItem("token");
-            const res = await fetch(`${API_BASE}/api/ai/resume-score`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ resumeText, jobDescription }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to score resume");
+            let data;
+            if (resumeFile) {
+                const form = new FormData();
+                form.append("resume", resumeFile);
+                form.append("jobDescription", jobDescription);
+                const res = await api.post("/ai/resume-score-pdf", form, {
+                    headers: { "Content-Type": "multipart/form-data" },
+                });
+                data = res.data;
+            } else {
+                const res = await api.post("/ai/resume-score", { resumeText, jobDescription });
+                data = res.data;
+            }
             setResult(data);
         } catch (e: any) {
             setResult({ summary: e.message || "Failed to score resume" });
@@ -677,6 +662,12 @@ const ResumeScorer: React.FC = () => {
                 Resume Compatibility Score
             </h2>
             <div className="grid gap-4">
+                <input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
+                    className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                />
                 <textarea
                     className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                     rows={4}
@@ -722,6 +713,7 @@ const ResumeScorer: React.FC = () => {
 const InternshipTrackerPage: React.FC = () => {
     
     // State Management
+    const nav = useNavigate();
     const [applications, setApplications] = useState<ApplicationData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null); 
@@ -729,6 +721,7 @@ const InternshipTrackerPage: React.FC = () => {
     const [showForm, setShowForm] = useState(false);
     const [showUpload, setShowUpload] = useState(false);
     const [showScore, setShowScore] = useState(false);
+    const [documents, setDocuments] = useState<any[]>([]);
 
     const cardClasses = "bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-6 border border-gray-100 dark:border-gray-700";
 
@@ -737,15 +730,14 @@ const InternshipTrackerPage: React.FC = () => {
         setIsLoading(true);
         try {
             const token = localStorage.getItem("token");
-            const response = await fetch(API_BASE_URL, {
-                headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-            }); 
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            if (!token) {
+                setError("Please login to view internships.");
+                setIsLoading(false);
+                nav("/login");
+                return;
             }
-
-            const data: ApplicationData[] = await response.json();
+            const response = await api.get("/internships");
+            const data: ApplicationData[] = response.data;
             // Ensure stipend is a number (it comes back as string from PostgreSQL JSON usually)
             const cleanedData = data.map(app => ({
                 ...app,
@@ -766,6 +758,18 @@ const InternshipTrackerPage: React.FC = () => {
         fetchApplications();
     }, [fetchApplications]); 
 
+    useEffect(() => {
+        const loadDocs = async () => {
+            try {
+                const res = await api.get("/documents/my");
+                setDocuments(res.data || []);
+            } catch {
+                // ignore
+            }
+        };
+        loadDocs();
+    }, []);
+
 
     // Data Submission (Create) - REQ-10
     const handleAddApplication = async (formData: ApplicationData) => { 
@@ -781,22 +785,8 @@ const InternshipTrackerPage: React.FC = () => {
         };
 
         try {
-            const token = localStorage.getItem("token");
-            const response = await fetch(API_BASE_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                },
-                body: JSON.stringify(applicationData), 
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || `Failed to add application with status: ${response.status}`);
-            }
-
-            const savedApplication: ApplicationData = await response.json(); 
+            const response = await api.post("/internships", applicationData);
+            const savedApplication: ApplicationData = response.data; 
             savedApplication.stipend = parseInt(savedApplication.stipend as any, 10) || 0;
 
             // Update local state with the new application data from the server
@@ -812,7 +802,7 @@ const InternshipTrackerPage: React.FC = () => {
     
     // Data Update (Update) - REQ-11
     const handleUpdateApplication = async (appId: number, updateData: Partial<ApplicationData>) => {
-        const url = `${API_BASE_URL}/${appId}`;
+        const url = `/internships/${appId}`;
         
         // Ensure only valid updates are sent (like status and nextinterviewdate)
         const updatePayload: Partial<ApplicationData> = {};
@@ -820,20 +810,7 @@ const InternshipTrackerPage: React.FC = () => {
         if (updateData.nextinterviewdate !== undefined) updatePayload.nextinterviewdate = updateData.nextinterviewdate || null;
         
         try {
-            const token = localStorage.getItem("token");
-            const response = await fetch(url, {
-                method: 'PUT', // Assuming your API uses PUT for full updates or PATCH for partial
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                },
-                body: JSON.stringify(updatePayload), 
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || `Failed to update application with status: ${response.status}`);
-            }
+            await api.put(url, updatePayload);
 
             // Update local state by merging the changes
             setApplications(prev => prev.map(app => 
@@ -1005,6 +982,23 @@ const InternshipTrackerPage: React.FC = () => {
                         />
                     </div>
                 )}
+
+                {/* Uploaded Documents */}
+                <div className={`max-w-6xl mx-auto text-left mt-10 ${cardClasses}`}>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Uploaded Documents</h3>
+                    {documents.length === 0 ? (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">No documents uploaded yet.</p>
+                    ) : (
+                        <div className="grid gap-3">
+                            {documents.map((doc) => (
+                                <div key={doc.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                                    <p className="font-medium">{doc.file_name}</p>
+                                    <p className="text-xs text-gray-500">Status: {doc.status}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
 
                 {/* Modal for Application Details and Update (REQ-11) */}
                 <AnimatePresence>
