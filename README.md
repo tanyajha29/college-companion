@@ -1,142 +1,202 @@
+# College Companion
 
-# 🎓 College Companion
+<p align="center">
+  <img src="docs/screenshots/logo.png" width="120" alt="College Companion Logo" />
+</p>
 
-College Companion is a modern, student-focused web application designed to help college students manage tasks, track productivity, and stay organized — all wrapped in a premium, animated UI experience.
+<p align="center">
+  A full-stack college management platform with MFA, attendance intelligence, document vault, payments,
+  realtime notifications, and AI-assisted tools.
+</p>
 
-This project focuses heavily on **clean UI/UX**, **smooth animations**, and **dynamic glow effects**, while keeping backend logic and integrations unchanged.
-
----
-
-## 🚀 Features
-
-### 📊 Dashboard & Productivity
-- Stats cards with professional icons
-- Dynamic glowing borders on cards
-- Smooth hover and entry animations
-- Real-time visual feedback for user actions
-
-### 📝 Tasks & Focus
-- Today’s Tasks section with:
-  - Task title
-  - Description
-  - Status (Start / Pause)
-- Working action buttons:
-  - **Start**
-  - **Pause**
-  - **View All Tasks**
-
-### 🔔 Notifications Panel
-- Animated notifications
-- Icon-based alert types (warning, streak, success)
-- Clear individual notifications
-- Clear all notifications functionality
-- Empty-state handling
+<p align="center">
+  <img src="https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB" alt="Frontend" />
+  <img src="https://img.shields.io/badge/Backend-Node%20%2B%20Express-3C873A" alt="Backend" />
+  <img src="https://img.shields.io/badge/Database-PostgreSQL-336791" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Cache-Redis-DC382D" alt="Redis" />
+  <img src="https://img.shields.io/badge/AI-Ollama-111111" alt="Ollama" />
+  <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License" />
+</p>
 
 ---
 
-## 🎨 UI / UX Enhancements
+## Highlights
 
-The UI is enhanced without touching backend logic or integrations.
-
-### Styling & Effects Added:
-- ✨ **Dynamic animated glow borders**
-- 🎯 **Framer Motion animations**
-- 🌈 **Gradient-based glow transitions**
-- 💎 **Premium dark theme**
-- 🧊 **Glassmorphism-inspired cards**
-- ⚡ **Smooth hover & tap transitions**
-- 🎨 **Consistent color palette**
-- 🧭 **Lucide-react professional icons**
-- 📱 **Responsive layout support**
+- Role-based access for Admin, Faculty/Staff, and Students
+- Email OTP MFA with Redis TTL
+- Helmet security headers, rate limiting, validation, audit logging
+- Attendance tracker + predictive risk flags
+- Placement tracker with resume compatibility scoring (PDF + JD)
+- CBCS elective selection with clash detection
+- Document vault on S3 with admin verification
+- Razorpay sandbox payments with PDF receipts
+- Real-time notifications via Socket.io
 
 ---
 
-## 🛠 Tech Stack
+## Screenshots
 
-### Frontend
-- **React**
-- **TypeScript**
-- **Tailwind CSS**
-- **Framer Motion**
-- **Lucide-react Icons**
-
-### Backend
-- Existing backend logic (unchanged)
-
----
-
-## 📂 Project Structure (UI Components)
-
+Create a folder and drop your images here:
+```
+docs/screenshots/
 ```
 
-components/
-│
-├── StatsCards.tsx
-├── TodayFocus.tsx
-├── TaskPreview.tsx
-├── NotificationsPanel.tsx
+Suggested filenames:
+```
+docs/screenshots/login.png
+docs/screenshots/dashboard-admin.png
+docs/screenshots/dashboard-student.png
+docs/screenshots/attendance.png
+docs/screenshots/internship.png
+docs/screenshots/documents.png
+docs/screenshots/payments.png
+docs/screenshots/ai-resume-score.png
+```
 
-````
-
-Each component:
-- Uses motion-based animations
-- Includes dynamic glow effects
-- Follows a unified premium design language
-
----
-
-## 🧠 Design Philosophy
-
-- Minimal but expressive
-- Motion should feel natural, not distracting
-- Glow effects should feel *alive*, not flashy
-- UI should communicate state clearly
-- Student-friendly yet professional
+Embed in README:
+```md
+![Login](docs/screenshots/login.png)
+```
 
 ---
 
-## ⚙️ Installation
+## Tech Stack
 
+**Frontend**
+- React + Vite, TypeScript, Tailwind CSS, Framer Motion
+
+**Backend**
+- Node.js + Express
+
+**Data & Infra**
+- PostgreSQL, Redis
+
+**Integrations**
+- AWS S3, Razorpay (test mode), Socket.io
+
+**AI**
+- Ollama (local) or OpenAI (optional)
+
+---
+
+## Project Structure
+
+Feature-based layout across client and server:
+```
+client/
+  src/
+    features/
+    shared/
+server/
+  src/
+    features/
+    shared/
+    config/
+    db/
+```
+
+---
+
+## Quick Start (Docker)
+
+1. Configure environment variables.
+- `server/.env`
+- `client/.env`
+
+2. Build and run.
 ```bash
-git clone <your-repo-url>
-cd college-companion
+docker compose up --build
+```
+
+3. Run migrations.
+```bash
+docker compose exec server npm run migrate
+```
+
+4. Load demo data (recommended for screenshots).
+```bash
+docker compose ps -q db
+docker cp server/src/seeds/full_demo_data.sql <DB_CONTAINER_ID>:/tmp/full_demo_data.sql
+docker compose exec db psql -U postgres -d college_companion -f /tmp/full_demo_data.sql
+```
+
+Git Bash tip:
+```
+MSYS_NO_PATHCONV=1
+```
+
+---
+
+## Local Development (Non-Docker)
+
+Backend:
+```bash
+cd server
 npm install
 npm run dev
-````
+```
 
----
-
-## 📌 Notes
-
-* No images or logos are used
-* UI-only enhancements
-* Fully ready-to-use and extensible
-* Designed to scale with future features
-
----
-
-## ✨ Future Improvements
-
-* Theme customization
-* Accessibility enhancements
-* User profile personalization
-* Analytics dashboard
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome!
-Feel free to fork, enhance, and submit pull requests.
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License.
-
+Frontend:
+```bash
+cd client
+npm install
+npm run dev
 ```
 
 ---
 
+## Environment Variables
 
+**Server (required)**
+- `PORT`
+- `JWT_SECRET`
+- `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_NAME`
+- `REDIS_URL`
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
+- `AWS_REGION`, `AWS_S3_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+- `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
+- `OLLAMA_URL`, `OLLAMA_MODEL` or `OPENAI_API_KEY`, `OPENAI_MODEL`
+
+**Server (optional)**
+- `CLIENT_ORIGIN` (comma-separated list of allowed frontend origins)
+
+**Client**
+- `VITE_API_URL`
+
+---
+
+## Demo Data
+
+Seed files:
+```
+server/src/seeds/demo_data.sql
+server/src/seeds/full_demo_data.sql
+```
+
+Import demo data:
+```bash
+docker compose ps -q db
+docker cp server/src/seeds/full_demo_data.sql <DB_CONTAINER_ID>:/tmp/full_demo_data.sql
+docker compose exec db psql -U postgres -d college_companion -f /tmp/full_demo_data.sql
+```
+
+**Demo Accounts**  
+Password: `Password@123`
+- `admin@college.local`
+- `faculty@college.local`
+- `student1@college.local`
+- `student2@college.local`
+
+---
+
+## Troubleshooting
+
+- `EAI_AGAIN` or `ENOTFOUND db`: ensure `DB_HOST=db` and rebuild the compose network.
+- CORS errors: add your frontend origin to `CLIENT_ORIGIN`.
+- Ollama model not found: run `ollama pull <model>`.
+
+---
+
+## License
+
+MIT
