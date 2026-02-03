@@ -1,19 +1,19 @@
 # College Companion
 
-A full‑stack college management platform with role‑based dashboards, MFA, attendance intelligence, document vault, payments, realtime notifications, and AI‑assisted tools.
+College Companion is a full-stack college management platform with role-based dashboards, MFA, attendance intelligence, document vault, payments, realtime notifications, and AI-assisted tools.
 
 ## Highlights
 
-- Role‑based access for Admin, Faculty/Staff, and Students
+- Role-based access for Admin, Faculty/Staff, and Students
 - MFA via Email OTP (Redis TTL)
 - Helmet security headers, rate limiting, validation, audit logging
 - Attendance tracker with predictive risk flags
-- Placement tracker with resume compatibility scoring
+- Placement tracker with resume compatibility scoring (PDF + JD)
 - FAQ chatbot and sentiment analysis
 - CBCS elective selection with clash detection
 - Document vault on S3 with admin verification
 - Razorpay sandbox payments with PDF receipts
-- Real‑time notifications via Socket.io
+- Real-time notifications via Socket.io
 
 ## Tech Stack
 
@@ -27,7 +27,7 @@ A full‑stack college management platform with role‑based dashboards, MFA, at
 
 ## Architecture
 
-Feature‑based structure across client and server.
+Feature-based structure across client and server.
 
 ```
 client/
@@ -58,7 +58,19 @@ docker compose up --build
 docker compose exec server npm run migrate
 ```
 
-## Local Development (Non‑Docker)
+4. Load full demo data (recommended for screenshots).
+```bash
+docker compose ps -q db
+docker cp server/src/seeds/full_demo_data.sql <DB_CONTAINER_ID>:/tmp/full_demo_data.sql
+docker compose exec db psql -U postgres -d college_companion -f /tmp/full_demo_data.sql
+```
+
+Git Bash tip:
+```
+MSYS_NO_PATHCONV=1
+```
+
+## Local Development (Non-Docker)
 
 Backend:
 ```bash
@@ -87,28 +99,24 @@ Server required:
 - `OLLAMA_URL`, `OLLAMA_MODEL` or `OPENAI_API_KEY`, `OPENAI_MODEL`
 
 Server optional:
-- `CLIENT_ORIGIN`
+- `CLIENT_ORIGIN` (comma-separated list of allowed frontend origins)
 
 Client:
 - `VITE_API_URL`
 
 ## Demo Data
 
-Seed file:
+Seed files:
 ```
 server/src/seeds/demo_data.sql
+server/src/seeds/full_demo_data.sql
 ```
 
 Import demo data:
 ```bash
 docker compose ps -q db
-docker cp server/src/seeds/demo_data.sql <DB_CONTAINER_ID>:/tmp/demo_data.sql
-docker compose exec db psql -U postgres -d college_companion -f /tmp/demo_data.sql
-```
-
-Git Bash tip:
-```
-MSYS_NO_PATHCONV=1
+docker cp server/src/seeds/full_demo_data.sql <DB_CONTAINER_ID>:/tmp/full_demo_data.sql
+docker compose exec db psql -U postgres -d college_companion -f /tmp/full_demo_data.sql
 ```
 
 ## Demo Accounts
@@ -121,9 +129,10 @@ Password: `Password@123`
 
 ## Screenshots
 
-Create a folder: `docs/screenshots/`
+Store screenshots in:
+- `docs/screenshots/`
 
-Recommended screenshots:
+Suggested filenames:
 - `docs/screenshots/login.png`
 - `docs/screenshots/dashboard-admin.png`
 - `docs/screenshots/dashboard-student.png`
@@ -131,9 +140,10 @@ Recommended screenshots:
 - `docs/screenshots/internship.png`
 - `docs/screenshots/documents.png`
 - `docs/screenshots/payments.png`
+- `docs/screenshots/ai-resume-score.png`
 
 Embed in README:
-```
+```md
 ![Login](docs/screenshots/login.png)
 ```
 
