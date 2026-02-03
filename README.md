@@ -1,34 +1,87 @@
 # College Companion
 
-College Companion is a full-stack college management platform with role-based dashboards, MFA, attendance intelligence, document vault, payments, realtime notifications, and AI-assisted tools.
+<p align="center">
+  <img src="docs/screenshots/logo.png" width="120" alt="College Companion Logo" />
+</p>
+
+<p align="center">
+  A full-stack college management platform with MFA, attendance intelligence, document vault, payments,
+  realtime notifications, and AI-assisted tools.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB" alt="Frontend" />
+  <img src="https://img.shields.io/badge/Backend-Node%20%2B%20Express-3C873A" alt="Backend" />
+  <img src="https://img.shields.io/badge/Database-PostgreSQL-336791" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Cache-Redis-DC382D" alt="Redis" />
+  <img src="https://img.shields.io/badge/AI-Ollama-111111" alt="Ollama" />
+  <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License" />
+</p>
+
+---
 
 ## Highlights
 
 - Role-based access for Admin, Faculty/Staff, and Students
-- MFA via Email OTP (Redis TTL)
+- Email OTP MFA with Redis TTL
 - Helmet security headers, rate limiting, validation, audit logging
-- Attendance tracker with predictive risk flags
+- Attendance tracker + predictive risk flags
 - Placement tracker with resume compatibility scoring (PDF + JD)
-- FAQ chatbot and sentiment analysis
 - CBCS elective selection with clash detection
 - Document vault on S3 with admin verification
 - Razorpay sandbox payments with PDF receipts
 - Real-time notifications via Socket.io
 
+---
+
+## Screenshots
+
+Create a folder and drop your images here:
+```
+docs/screenshots/
+```
+
+Suggested filenames:
+```
+docs/screenshots/login.png
+docs/screenshots/dashboard-admin.png
+docs/screenshots/dashboard-student.png
+docs/screenshots/attendance.png
+docs/screenshots/internship.png
+docs/screenshots/documents.png
+docs/screenshots/payments.png
+docs/screenshots/ai-resume-score.png
+```
+
+Embed in README:
+```md
+![Login](docs/screenshots/login.png)
+```
+
+---
+
 ## Tech Stack
 
-- Frontend: React + Vite, TypeScript, Tailwind CSS, Framer Motion
-- Backend: Node.js + Express
-- Database: PostgreSQL
-- Cache: Redis
-- Storage: AWS S3
-- Payments: Razorpay (test mode)
-- AI: Ollama (local) or OpenAI (optional)
+**Frontend**
+- React + Vite, TypeScript, Tailwind CSS, Framer Motion
 
-## Architecture
+**Backend**
+- Node.js + Express
 
-Feature-based structure across client and server.
+**Data & Infra**
+- PostgreSQL, Redis
 
+**Integrations**
+- AWS S3, Razorpay (test mode), Socket.io
+
+**AI**
+- Ollama (local) or OpenAI (optional)
+
+---
+
+## Project Structure
+
+Feature-based layout across client and server:
 ```
 client/
   src/
@@ -42,13 +95,15 @@ server/
     db/
 ```
 
+---
+
 ## Quick Start (Docker)
 
 1. Configure environment variables.
 - `server/.env`
 - `client/.env`
 
-2. Start the stack.
+2. Build and run.
 ```bash
 docker compose up --build
 ```
@@ -58,7 +113,7 @@ docker compose up --build
 docker compose exec server npm run migrate
 ```
 
-4. Load full demo data (recommended for screenshots).
+4. Load demo data (recommended for screenshots).
 ```bash
 docker compose ps -q db
 docker cp server/src/seeds/full_demo_data.sql <DB_CONTAINER_ID>:/tmp/full_demo_data.sql
@@ -69,6 +124,8 @@ Git Bash tip:
 ```
 MSYS_NO_PATHCONV=1
 ```
+
+---
 
 ## Local Development (Non-Docker)
 
@@ -86,9 +143,11 @@ npm install
 npm run dev
 ```
 
+---
+
 ## Environment Variables
 
-Server required:
+**Server (required)**
 - `PORT`
 - `JWT_SECRET`
 - `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_NAME`
@@ -98,11 +157,13 @@ Server required:
 - `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
 - `OLLAMA_URL`, `OLLAMA_MODEL` or `OPENAI_API_KEY`, `OPENAI_MODEL`
 
-Server optional:
+**Server (optional)**
 - `CLIENT_ORIGIN` (comma-separated list of allowed frontend origins)
 
-Client:
+**Client**
 - `VITE_API_URL`
+
+---
 
 ## Demo Data
 
@@ -119,39 +180,22 @@ docker cp server/src/seeds/full_demo_data.sql <DB_CONTAINER_ID>:/tmp/full_demo_d
 docker compose exec db psql -U postgres -d college_companion -f /tmp/full_demo_data.sql
 ```
 
-## Demo Accounts
-
+**Demo Accounts**  
 Password: `Password@123`
 - `admin@college.local`
 - `faculty@college.local`
 - `student1@college.local`
 - `student2@college.local`
 
-## Screenshots
-
-Store screenshots in:
-- `docs/screenshots/`
-
-Suggested filenames:
-- `docs/screenshots/login.png`
-- `docs/screenshots/dashboard-admin.png`
-- `docs/screenshots/dashboard-student.png`
-- `docs/screenshots/attendance.png`
-- `docs/screenshots/internship.png`
-- `docs/screenshots/documents.png`
-- `docs/screenshots/payments.png`
-- `docs/screenshots/ai-resume-score.png`
-
-Embed in README:
-```md
-![Login](docs/screenshots/login.png)
-```
+---
 
 ## Troubleshooting
 
 - `EAI_AGAIN` or `ENOTFOUND db`: ensure `DB_HOST=db` and rebuild the compose network.
 - CORS errors: add your frontend origin to `CLIENT_ORIGIN`.
 - Ollama model not found: run `ollama pull <model>`.
+
+---
 
 ## License
 
