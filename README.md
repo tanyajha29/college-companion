@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  A full-stack college management platform with MFA, attendance intelligence, document vault, payments,
-  realtime notifications, and AI-assisted tools.
+  A full-stack college management platform with MFA, attendance intelligence, a secure document vault,
+  payments, realtime notifications, and AI-assisted tools.
 </p>
 
 <p align="center">
@@ -20,17 +20,39 @@
 
 ---
 
-## Highlights
+## Overview
 
-- Role-based access for Admin, Faculty/Staff, and Students
+College Companion helps admins, faculty/staff, and students manage academics, operations, and career readiness in one place. It combines secure authentication, role-based dashboards, audit logging, payments, document verification, attendance analytics, and AI features like resume compatibility scoring.
+
+---
+
+## Key Features
+
+### Security & Reliability
 - Email OTP MFA with Redis TTL
-- Helmet security headers, rate limiting, validation, audit logging
-- Attendance tracker + predictive risk flags
-- Placement tracker with resume compatibility scoring (PDF + JD)
+- Helmet security headers
+- Rate-limited auth endpoints
+- Input validation and sanitization
+- System-wide audit logging
+
+### Academic Operations
+- Timetable management
+- Attendance tracker + predictive risk flagging
 - CBCS elective selection with clash detection
-- Document vault on S3 with admin verification
-- Razorpay sandbox payments with PDF receipts
-- Real-time notifications via Socket.io
+- Reminders and announcements
+
+### Placement & Career
+- Internship tracker with status updates
+- Resume compatibility scoring (PDF + JD)
+
+### Documents & Payments
+- Secure document vault (S3) with admin verification
+- Razorpay sandbox fee payments
+- PDF receipt generation
+
+### Realtime & AI
+- Socket.io realtime notifications
+- Ollama-based AI scoring and insights
 
 ---
 
@@ -93,6 +115,106 @@ server/
     shared/
     config/
     db/
+```
+
+---
+
+## Features by Role
+
+**Admin**
+- User management and role control
+- Department and division management
+- Audit log visibility for critical actions
+- Document verification and approval
+- System-wide reminders and announcements
+
+**Faculty/Staff**
+- Timetable management
+- Attendance marking and analytics
+- Department/division reminders
+- Internship/application status reviews
+
+**Student**
+- Personal timetable view
+- Attendance overview + risk flags
+- Internship tracker and resume scoring
+- Document upload + verification status
+- Fee payments + receipts
+
+---
+
+## API Endpoints (High Level)
+
+**Auth**
+- `POST /api/auth/login` - request login OTP
+- `POST /api/auth/verify-otp` - verify OTP, return JWT
+- `POST /api/auth/request-registration` - request registration OTP
+- `POST /api/auth/verify-registration` - verify registration OTP
+- `POST /api/auth/resend-otp` - resend login OTP
+
+**Profile**
+- `GET /api/profile` - fetch profile
+- `PUT /api/profile` - update profile
+
+**Attendance**
+- `GET /api/attendance/departments`
+- `GET /api/attendance/sessions`
+- `GET /api/attendance/session-roster/:sessionId`
+- `POST /api/attendance/mark`
+- `GET /api/attendance/my-summary`
+- `GET /api/attendance/predict-risk`
+
+**Timetable**
+- `GET /api/timetable`
+- `POST /api/timetable`
+- `PUT /api/timetable/:id`
+- `DELETE /api/timetable/:id`
+
+**Internships**
+- `GET /api/internships`
+- `POST /api/internships`
+- `PUT /api/internships/:id`
+
+**Documents**
+- `POST /api/documents/presign`
+- `GET /api/documents/my`
+
+**Payments**
+- `POST /api/payments/create-order`
+- `POST /api/payments/verify`
+
+**AI**
+- `POST /api/ai/resume-score`
+- `POST /api/ai/resume-score-pdf`
+
+---
+
+## Architecture
+
+```
+┌───────────────────────────────┐
+│           Client              │
+│  React + Vite + Tailwind CSS  │
+└───────────────┬───────────────┘
+                │  REST + Socket.io
+┌───────────────▼───────────────┐
+│          Node API             │
+│   Express + Feature Modules   │
+├───────────────┬───────────────┤
+│  PostgreSQL   │     Redis     │
+│   (Data)      │    (OTP)      │
+└───────────────┴───────────────┘
+                │
+      ┌─────────▼─────────┐
+      │    AWS S3         │
+      │  Document Vault   │
+      └───────────────────┘
+
+AI (Local)
+┌───────────────────────────────┐
+│            Ollama             │
+│  Resume Compatibility Scoring │
+└───────────────────────────────┘
 ```
 
 ---
@@ -186,6 +308,22 @@ Password: `Password@123`
 - `faculty@college.local`
 - `student1@college.local`
 - `student2@college.local`
+
+---
+
+## Common Tasks
+
+**Run migrations**
+```bash
+docker compose exec server npm run migrate
+```
+
+**Seed demo data**
+```bash
+docker compose ps -q db
+docker cp server/src/seeds/full_demo_data.sql <DB_CONTAINER_ID>:/tmp/full_demo_data.sql
+docker compose exec db psql -U postgres -d college_companion -f /tmp/full_demo_data.sql
+```
 
 ---
 
