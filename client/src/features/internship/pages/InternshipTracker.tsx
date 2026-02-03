@@ -736,7 +736,10 @@ const InternshipTrackerPage: React.FC = () => {
     const fetchApplications = useCallback(async () => {
         setIsLoading(true);
         try {
-            const response = await fetch(API_BASE_URL); 
+            const token = localStorage.getItem("token");
+            const response = await fetch(API_BASE_URL, {
+                headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            }); 
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -778,9 +781,13 @@ const InternshipTrackerPage: React.FC = () => {
         };
 
         try {
+            const token = localStorage.getItem("token");
             const response = await fetch(API_BASE_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
                 body: JSON.stringify(applicationData), 
             });
 
@@ -813,9 +820,13 @@ const InternshipTrackerPage: React.FC = () => {
         if (updateData.nextinterviewdate !== undefined) updatePayload.nextinterviewdate = updateData.nextinterviewdate || null;
         
         try {
+            const token = localStorage.getItem("token");
             const response = await fetch(url, {
                 method: 'PUT', // Assuming your API uses PUT for full updates or PATCH for partial
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
                 body: JSON.stringify(updatePayload), 
             });
 
