@@ -2,6 +2,7 @@ import Navbar from "./shared/components/Navbar";
 import { Routes, Route } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
+import ProtectedRoute from "./shared/components/ProtectedRoute";
 
 // Import pages
 import Home from "./features/home/pages/Home";
@@ -23,7 +24,9 @@ export default function App() {
     socket.on("notification", (payload) => {
       setNotifications((prev) => [payload, ...prev].slice(0, 3));
     });
-    return () => socket.disconnect();
+    return () => {
+      socket.disconnect();
+    };
   }, [API_BASE]);
 
   return (
@@ -40,20 +43,24 @@ export default function App() {
           ))}
         </div>
       )}
-      
+
       <Routes>
         {/*Landing Page*/}
         <Route path="/" element={<Home />} />
 
-         {/*Other Page*/}
-        <Route path="/timetable" element={<Timetable />} />
-        <Route path="/attendance" element={<Attendance />} />
-        <Route path="/reminders" element={<Remainders />} />
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute allowedRoles={["admin", "faculty", "student", "staff"]} />}>
+          <Route path="/timetable" element={<Timetable />} />
+          <Route path="/attendance" element={<Attendance />} />
+          <Route path="/reminders" element={<Remainders />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/internship" element={<InternshipTrackerPage />} />
+        </Route>
+
+        {/* Auth Pages */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/internship" element={<InternshipTrackerPage />} />
       </Routes>
     </div>
   );
