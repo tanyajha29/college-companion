@@ -56,7 +56,7 @@ College Companion helps admins, faculty/staff, and students manage academics, op
 
 ---
 
-## Screenshots
+## Screenshots (Later)
 
 Create a folder and drop your images here:
 ```
