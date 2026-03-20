@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import OTPInput from "../components/OTPInput";
+import { useAuth } from "../../../shared/context/AuthContext";
 
 export default function Login() {
   const nav = useNavigate();
   const API_BASE = (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
   const [role, setRole] = useState("student");
@@ -79,11 +81,18 @@ export default function Login() {
         throw new Error(data.message || "OTP verification failed");
       }
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.user?.role || role);
-      localStorage.setItem("department", department);
+      const userPayload = data.user || {};
+      login(
+        {
+          id: String(userPayload.userId ?? ""),
+          name: userPayload.username || userPayload.name || "",
+          email: userPayload.email || email,
+          role: (userPayload.role || role) as any,
+        },
+        data.token
+      );
 
-      nav("/");
+      nav("/dashboard");
     } catch (error: any) {
       setErr(error.message);
     } finally {

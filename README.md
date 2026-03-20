@@ -1,7 +1,7 @@
 # College Companion
 
 <p align="center">
-  <img src="docs/screenshots/logo.png" width="120" alt="College Companion Logo" />
+  <img src="docs/screenshorts/readme_logo.png" width="160" alt="College Companion Logo" />
 </p>
 
 <p align="center">
@@ -58,27 +58,13 @@ College Companion helps admins, faculty/staff, and students manage academics, op
 
 ## Screenshots (Later)
 
-Create a folder and drop your images here:
-```
-docs/screenshots/
-```
+Current set:
 
-Suggested filenames:
-```
-docs/screenshots/login.png
-docs/screenshots/dashboard-admin.png
-docs/screenshots/dashboard-student.png
-docs/screenshots/attendance.png
-docs/screenshots/internship.png
-docs/screenshots/documents.png
-docs/screenshots/payments.png
-docs/screenshots/ai-resume-score.png
-```
-
-Embed in README:
-```md
-![Login](docs/screenshots/login.png)
-```
+![Home](docs/screenshorts/home.png)
+![Login](docs/screenshorts/login.png)
+![Timetable](docs/screenshorts/timetable.png)
+![Attendance Tracker](docs/screenshorts/attendence%20Tracker.png)
+![Reminders](docs/screenshorts/remainders.png)
 
 ---
 
