@@ -18,6 +18,7 @@ import paymentsRoutes from "./features/payments/routes.js";
 import notificationsRoutes from "./features/notifications/routes.js";
 import cbcRoutes from "./features/cbc/routes.js";
 import aiRoutes from "./features/ai/routes.js";
+import dashboardRoutes from "./features/dashboard/routes.js";
 
 const app = express();
 
@@ -66,6 +67,7 @@ app.use("/api/payments", paymentsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/cbc", cbcRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
