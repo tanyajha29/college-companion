@@ -32,12 +32,15 @@ services:
       DB_HOST: db
       REDIS_URL: redis://redis:6379
       CLIENT_ORIGIN: http://localhost:5173
+      OLLAMA_URL: http://ollama:11434
     ports:
       - "5000:5000"
     depends_on:
       db:
         condition: service_healthy
       redis:
+        condition: service_started
+      ollama:
         condition: service_started
     volumes:
       - ./server:/app
@@ -56,6 +59,14 @@ services:
     volumes:
       - ./client:/app
       - /app/node_modules
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
 
 volumes:
   pg_data:
