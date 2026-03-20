@@ -56,15 +56,15 @@ College Companion helps admins, faculty/staff, and students manage academics, op
 
 ---
 
-## Screenshots (Later)
+## Screenshots
 
-Current set:
+| Home | Login | Timetable |
+| --- | --- | --- |
+| ![Home](docs/screenshorts/home.png) | ![Login](docs/screenshorts/login.png) | ![Timetable](docs/screenshorts/timetable.png) |
 
-![Home](docs/screenshorts/home.png)
-![Login](docs/screenshorts/login.png)
-![Timetable](docs/screenshorts/timetable.png)
-![Attendance Tracker](docs/screenshorts/attendence%20Tracker.png)
-![Reminders](docs/screenshorts/remainders.png)
+| Attendance Tracker | Reminders |
+| --- | --- |
+| ![Attendance Tracker](docs/screenshorts/attendence%20Tracker.png) | ![Reminders](docs/screenshorts/remainders.png) |
 
 ---
 
