@@ -34,6 +34,9 @@ app.use(helmet({
 
 app.use(cors({
   origin: (origin, callback) => {
+    // In non-production, allow any origin to reduce local dev friction (WSL/host IP changes).
+    if (env.nodeEnv !== "production") return callback(null, true);
+
     if (!origin) return callback(null, true);
     const allowed = Array.isArray(env.clientOrigin) ? env.clientOrigin : [env.clientOrigin];
     if (allowed.includes(origin)) return callback(null, true);
