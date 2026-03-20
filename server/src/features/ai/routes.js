@@ -10,7 +10,17 @@ import { env } from "../../config/env.js";
 import { logAudit } from "../audit/auditService.js";
 
 const router = express.Router();
-const openai = new OpenAI({ apiKey: env.openai.apiKey });
+
+const hasOpenAIKey = Boolean(env.openai.apiKey);
+let openaiClient = null;
+const getOpenAI = () => {
+  if (!hasOpenAIKey) return null;
+  if (!openaiClient) {
+    openaiClient = new OpenAI({ apiKey: env.openai.apiKey });
+  }
+  return openaiClient;
+};
+
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 const __filename = fileURLToPath(import.meta.url);
@@ -62,7 +72,8 @@ Job Description: ${jobDescription}
   if (useOllama()) {
     outputText = await callOllama(prompt);
   } else {
-    if (!env.openai.apiKey) {
+    const openai = getOpenAI();
+    if (!openai) {
       throw new Error("OpenAI API key not configured");
     }
     const response = await openai.responses.create({
@@ -98,6 +109,9 @@ router.post("/resume-score", authMiddleware, async (req, res) => {
     res.json(parsed);
   } catch (err) {
     console.error("Resume score error:", err);
+    if (err?.message?.includes("not configured")) {
+      return res.status(503).json({ message: err.message });
+    }
     res.status(500).json({ message: "Failed to score resume" });
   }
 });
@@ -125,6 +139,9 @@ router.post("/resume-score-pdf", authMiddleware, upload.single("resume"), async 
     return res.json(parsed);
   } catch (err) {
     console.error("Resume PDF score error:", err);
+    if (err?.message?.includes("not configured")) {
+      return res.status(503).json({ message: err.message });
+    }
     res.status(500).json({ message: "Failed to score resume PDF" });
   }
 });
@@ -149,8 +166,9 @@ Return a short helpful answer.
     if (useOllama()) {
       answer = await callOllama(prompt);
     } else {
-      if (!env.openai.apiKey) {
-        return res.status(500).json({ message: "OpenAI API key not configured" });
+      const openai = getOpenAI();
+      if (!openai) {
+        return res.status(503).json({ message: "AI service not configured" });
       }
       const response = await openai.responses.create({
         model: env.openai.model,
@@ -181,8 +199,9 @@ Text: ${text}
     if (useOllama()) {
       outputText = await callOllama(prompt);
     } else {
-      if (!env.openai.apiKey) {
-        return res.status(500).json({ message: "OpenAI API key not configured" });
+      const openai = getOpenAI();
+      if (!openai) {
+        return res.status(503).json({ message: "AI service not configured" });
       }
       const response = await openai.responses.create({
         model: env.openai.model,
@@ -206,6 +225,9 @@ Text: ${text}
     res.json(parsed);
   } catch (err) {
     console.error("Sentiment error:", err);
+    if (err?.message?.includes("not configured")) {
+      return res.status(503).json({ message: err.message });
+    }
     res.status(500).json({ message: "Failed to analyze sentiment" });
   }
 });

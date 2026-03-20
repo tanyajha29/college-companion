@@ -9,13 +9,24 @@ import { logAudit } from "../audit/auditService.js";
 
 const router = express.Router();
 
-const razorpay = new Razorpay({
-  key_id: env.razorpay.keyId,
-  key_secret: env.razorpay.keySecret,
-});
+const razorpayConfigured = Boolean(env.razorpay.keyId && env.razorpay.keySecret);
+const razorpay = razorpayConfigured
+  ? new Razorpay({
+      key_id: env.razorpay.keyId,
+      key_secret: env.razorpay.keySecret,
+    })
+  : null;
+
+if (!razorpayConfigured) {
+  console.warn("Razorpay keys are missing; payment routes will respond with 503 until configured.");
+}
 
 router.post("/create-order", authMiddleware, async (req, res) => {
   try {
+    if (!razorpayConfigured) {
+      return res.status(503).json({ message: "Payment gateway not configured" });
+    }
+
     const { amount, currency = "INR" } = req.body;
     if (!amount || amount <= 0) return res.status(400).json({ message: "amount is required" });
 
@@ -40,6 +51,10 @@ router.post("/create-order", authMiddleware, async (req, res) => {
 
 router.post("/verify", authMiddleware, async (req, res) => {
   try {
+    if (!razorpayConfigured) {
+      return res.status(503).json({ message: "Payment gateway not configured" });
+    }
+
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({ message: "Missing payment verification fields" });
