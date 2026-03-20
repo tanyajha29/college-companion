@@ -690,17 +690,51 @@ const ResumeScorer: React.FC = () => {
                     {loading ? "Scoring..." : "Get Compatibility Score"}
                 </button>
                 {result && (
-                    <div className="bg-indigo-50 dark:bg-gray-800 p-4 rounded-lg text-sm">
+                    <div className="bg-indigo-50 dark:bg-gray-800 p-4 rounded-lg text-sm space-y-2">
                         {result.score !== undefined && (
-                            <p className="font-semibold">Score: {result.score}</p>
+                            <p className="font-semibold text-indigo-900 dark:text-indigo-200">Score: {result.score}/100</p>
                         )}
-                        {result.summary && <p className="mt-2">{result.summary}</p>}
+                        {result.summary && <p className="text-gray-800 dark:text-gray-200">{result.summary}</p>}
+
                         {result.strengths?.length ? (
-                            <p className="mt-2">Strengths: {result.strengths.join(", ")}</p>
+                            <div>
+                                <p className="font-semibold text-green-700 dark:text-green-300">Strengths</p>
+                                <ul className="list-disc list-inside text-gray-800 dark:text-gray-200">
+                                    {result.strengths.map((s: string, idx: number) => (
+                                        <li key={`str-${idx}`}>{s}</li>
+                                    ))}
+                                </ul>
+                            </div>
                         ) : null}
+
                         {result.gaps?.length ? (
-                            <p className="mt-1">Gaps: {result.gaps.join(", ")}</p>
+                            <div>
+                                <p className="font-semibold text-red-700 dark:text-red-300">Gaps</p>
+                                <ul className="list-disc list-inside text-gray-800 dark:text-gray-200">
+                                    {result.gaps.map((g: string, idx: number) => (
+                                        <li key={`gap-${idx}`}>{g}</li>
+                                    ))}
+                                </ul>
+                            </div>
                         ) : null}
+
+                        {result.suggestions?.length ? (
+                            <div>
+                                <p className="font-semibold text-amber-700 dark:text-amber-300">Suggestions</p>
+                                <ul className="list-disc list-inside text-gray-800 dark:text-gray-200">
+                                    {result.suggestions.map((s: string, idx: number) => (
+                                        <li key={`sug-${idx}`}>{s}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ) : null}
+
+                        {result.keywordMatch && (
+                            <p className="text-gray-700 dark:text-gray-200">Keyword match: {result.keywordMatch}</p>
+                        )}
+                        {result.atsReadiness && (
+                            <p className="text-gray-700 dark:text-gray-200">ATS readiness: {result.atsReadiness}</p>
+                        )}
                     </div>
                 )}
             </div>
