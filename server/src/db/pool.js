@@ -7,6 +7,14 @@ export const pool = new pg.Pool({
   database: env.db.name,
   password: env.db.password,
   port: env.db.port,
+  // Enable SSL for hosted Postgres (e.g., AWS RDS) while keeping local dev simple.
+  ssl: (() => {
+    const host = env.db.host?.toLowerCase?.() || "";
+    const isLocal = ["localhost", "127.0.0.1", "db"].includes(host);
+    const looksLikeRds = host.includes("rds.amazonaws.com");
+    const isProduction = env.nodeEnv === "production";
+    return isLocal ? false : (looksLikeRds || isProduction ? { rejectUnauthorized: false } : false);
+  })(),
 });
 
 const connectWithRetry = async (attempt = 1) => {
