@@ -5,10 +5,10 @@ import * as controller from "./controller.js";
 const router = express.Router();
 
 router.get(
-  "/dashboard",
-  authMiddleware,
-  authorizeRoles("staff", "admin", "faculty"),
-  controller.getDashboardInfo
+    "/dashboard",
+    authMiddleware,
+    authorizeRoles("student"),
+    controller.getDashboardInfo
 );
 
 export default router;

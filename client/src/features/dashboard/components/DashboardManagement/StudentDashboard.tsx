@@ -4,6 +4,9 @@ import { motion } from "framer-motion";
 import { BookOpen, Calendar, CheckCircle, Clock, TrendingUp } from "lucide-react";
 import { useState, useEffect } from "react";
 
+const AI_ENABLED = false;
+const PAYMENTS_ENABLED = false;
+
 declare global {
   interface Window {
     Razorpay: any;
@@ -46,6 +49,10 @@ export default function StudentDashboard() {
 
   const askFAQ = async () => {
     if (!question.trim()) return;
+    if (!AI_ENABLED) {
+      setAnswer("AI FAQ is disabled in this build.");
+      return;
+    }
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
@@ -104,56 +111,14 @@ export default function StudentDashboard() {
     loadElectives();
   }, []);
 
-  const loadRazorpayScript = () =>
-    new Promise<boolean>((resolve) => {
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-
   const payFees = async () => {
+    if (!PAYMENTS_ENABLED) {
+      setAnswer("Online payments are disabled.");
+      return;
+    }
     try {
       setPaying(true);
-      const loaded = await loadRazorpayScript();
-      if (!loaded) throw new Error("Failed to load Razorpay checkout.");
-
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE}/api/payments/create-order`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ amount: 1000, currency: "INR" }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to create order");
-
-      const options = {
-        key: data.keyId,
-        amount: data.amount,
-        currency: data.currency,
-        name: "College Companion",
-        description: "Fee Payment (Test)",
-        order_id: data.orderId,
-        handler: async (response: any) => {
-          await fetch(`${API_BASE}/api/payments/verify`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(response),
-          });
-          window.open(`${API_BASE}/api/payments/receipt/${data.orderId}`, "_blank");
-        },
-        theme: { color: "#2563eb" },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      setAnswer("Online payments are disabled.");
     } catch (e: any) {
       setAnswer(e.message || "Failed to initiate payment.");
     } finally {

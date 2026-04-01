@@ -3,6 +3,8 @@ import { Users, Briefcase, BookOpen, TrendingUp, Filter } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 
+const AI_ENABLED = false;
+
 // Mock Data for Key Metrics
 const stats = [
   { id: 1, name: 'Total Users', value: '4,521', icon: Users, color: 'text-blue-500', bgColor: 'bg-blue-50' },
@@ -27,6 +29,10 @@ export default function AdminReportDashboard() {
 
   const analyzeSentiment = async () => {
     if (!feedback.trim()) return;
+    if (!AI_ENABLED) {
+      setSentiment({ mood: "disabled", score: 0, summary: "AI sentiment is disabled in this build." });
+      return;
+    }
     try {
       setLoading(true);
       const token = localStorage.getItem("token");

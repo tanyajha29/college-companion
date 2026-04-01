@@ -1,11 +1,14 @@
 import express from "express";
-import authMiddleware from "../../shared/middleware/auth.js";
-import roleCheck from "../../shared/middleware/roleCheck.js";
+import authMiddleware, { authorizeRoles } from "../../shared/middleware/auth.js";
+import * as controller from "./controller.js";
 
 const router = express.Router();
 
-router.get("/dashboard", authMiddleware, roleCheck(["admin"]), (req, res) => {
-  res.json({ message: "Welcome Admin! 🎉" });
-});
+router.get(
+  "/dashboard",
+  authMiddleware,
+  authorizeRoles("admin"),
+  controller.getDashboardInfo
+);
 
 export default router;

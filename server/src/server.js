@@ -8,5 +8,12 @@ const server = http.createServer(app);
 initSockets(server);
 
 server.listen(env.port, () => {
+
   console.log(`✅ Server running on port ${env.port}`);
+  console.log({
+  DB_USER: process.env.DB_USER,
+  DB_HOST: process.env.DB_HOST,
+  DB_PORT: process.env.DB_PORT,
+  DB_NAME: process.env.DB_NAME,
+});
 });

@@ -1,7 +1,7 @@
-# College Companion
+<h1 align="center">College Companion</h1>
 
 <p align="center">
-  <img src="docs/screenshots/logo.png" width="120" alt="College Companion Logo" />
+  <img src="client/public/readme_logo.png" width="120" alt="College Companion Logo" />
 </p>
 
 <p align="center">

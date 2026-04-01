@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 // --- Configuration ---
 const API_BASE = (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
+const AI_ENABLED = false;
 
 // --- Interfaces ---
 
@@ -632,6 +633,10 @@ const ResumeScorer: React.FC = () => {
     const [loading, setLoading] = useState(false);
 
     const handleScore = async () => {
+        if (!AI_ENABLED) {
+            setResult({ summary: "Resume scoring is disabled in this build." });
+            return;
+        }
         if ((!resumeText.trim() && !resumeFile) || !jobDescription.trim()) return;
         try {
             setLoading(true);

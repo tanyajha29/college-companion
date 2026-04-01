@@ -6,7 +6,8 @@ services:
       POSTGRES_PASSWORD: root
       POSTGRES_DB: college_companion
     ports:
-      - "5432:5432"
+      # Host port changed to avoid clashing with any local PostgreSQL instance
+      - "5433:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
