@@ -9,7 +9,9 @@ import { logAudit } from "../audit/auditService.js";
 
 const router = express.Router();
 
-const razorpayConfigured = Boolean(env.razorpay.keyId && env.razorpay.keySecret);
+const razorpayConfigured = Boolean(
+  env.razorpay?.keyId && env.razorpay?.keySecret
+);
 const razorpay = razorpayConfigured
   ? new Razorpay({
       key_id: env.razorpay.keyId,
