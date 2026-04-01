@@ -1,16 +1,17 @@
 import express from "express";
-import OpenAI from "openai";
 import multer from "multer";
 import pdfParse from "pdf-parse";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import authMiddleware from "../../shared/middleware/auth.js";
-import { env } from "../../config/env.js";
 import { logAudit } from "../audit/auditService.js";
+import { scoreResume } from "./aiService.js";
+import { env } from "../../config/env.js";
+import OpenAI from "openai";
 
 const router = express.Router();
-const openai = new OpenAI({ apiKey: env.openai.apiKey });
+
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,6 +27,18 @@ const safeJsonParse = (text) => {
   }
 };
 
+const hasOpenAIKey = Boolean(env.openai?.apiKey);
+let openaiClient = null;
+const getOpenAI = () => {
+  if (!hasOpenAIKey) return null;
+  if (!openaiClient) {
+    openaiClient = new OpenAI({ apiKey: env.openai.apiKey });
+  }
+  return openaiClient;
+};
+
+const useOllama = () => Boolean(env.ollama?.url);
+
 const callOllama = async (prompt) => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 60000);
@@ -33,9 +46,10 @@ const callOllama = async (prompt) => {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: env.ollama.model,
+      model: env.ollama.model || "llama3.1:8b",
       prompt,
       stream: false,
+      options: { temperature: 0.2 },
     }),
     signal: controller.signal,
   });
@@ -48,34 +62,6 @@ const callOllama = async (prompt) => {
   return data.response || "";
 };
 
-const useOllama = () => env.ollama?.url;
-
-const runResumeScore = async ({ resumeText, jobDescription }) => {
-  const prompt = `
-You are an ATS evaluator. Compare the resume to the job description.
-Return JSON only with keys: score (0-100), strengths (array of strings), gaps (array of strings), summary (string).
-Resume: ${resumeText}
-Job Description: ${jobDescription}
-  `.trim();
-
-  let outputText = "";
-  if (useOllama()) {
-    outputText = await callOllama(prompt);
-  } else {
-    if (!env.openai.apiKey) {
-      throw new Error("OpenAI API key not configured");
-    }
-    const response = await openai.responses.create({
-      model: env.openai.model,
-      input: prompt,
-      temperature: 0.2,
-    });
-    outputText = response.output_text || "";
-  }
-
-  return safeJsonParse(outputText) || { score: 0, strengths: [], gaps: [], summary: outputText };
-};
-
 router.post("/resume-score", authMiddleware, async (req, res) => {
   try {
     const { resumeText, jobDescription } = req.body;
@@ -83,7 +69,7 @@ router.post("/resume-score", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "resumeText and jobDescription are required" });
     }
 
-    const parsed = await runResumeScore({ resumeText, jobDescription });
+    const parsed = await scoreResume({ resumeText, jobDescription });
 
     await logAudit({
       actorUserId: req.user.userId,
@@ -98,7 +84,8 @@ router.post("/resume-score", authMiddleware, async (req, res) => {
     res.json(parsed);
   } catch (err) {
     console.error("Resume score error:", err);
-    res.status(500).json({ message: "Failed to score resume" });
+    const status = err.statusCode || 500;
+    res.status(status).json({ message: err.message || "Failed to score resume" });
   }
 });
 
@@ -110,7 +97,7 @@ router.post("/resume-score-pdf", authMiddleware, upload.single("resume"), async 
     }
     const pdf = await pdfParse(req.file.buffer);
     const resumeText = pdf.text || "";
-    const parsed = await runResumeScore({ resumeText, jobDescription });
+    const parsed = await scoreResume({ resumeText, jobDescription });
 
     await logAudit({
       actorUserId: req.user.userId,
@@ -125,7 +112,8 @@ router.post("/resume-score-pdf", authMiddleware, upload.single("resume"), async 
     return res.json(parsed);
   } catch (err) {
     console.error("Resume PDF score error:", err);
-    res.status(500).json({ message: "Failed to score resume PDF" });
+    const status = err.statusCode || 500;
+    res.status(status).json({ message: err.message || "Failed to score resume PDF" });
   }
 });
 
@@ -149,8 +137,9 @@ Return a short helpful answer.
     if (useOllama()) {
       answer = await callOllama(prompt);
     } else {
-      if (!env.openai.apiKey) {
-        return res.status(500).json({ message: "OpenAI API key not configured" });
+      const openai = getOpenAI();
+      if (!openai) {
+        return res.status(503).json({ message: "AI service not configured" });
       }
       const response = await openai.responses.create({
         model: env.openai.model,
@@ -181,8 +170,9 @@ Text: ${text}
     if (useOllama()) {
       outputText = await callOllama(prompt);
     } else {
-      if (!env.openai.apiKey) {
-        return res.status(500).json({ message: "OpenAI API key not configured" });
+      const openai = getOpenAI();
+      if (!openai) {
+        return res.status(503).json({ message: "AI service not configured" });
       }
       const response = await openai.responses.create({
         model: env.openai.model,
@@ -206,6 +196,9 @@ Text: ${text}
     res.json(parsed);
   } catch (err) {
     console.error("Sentiment error:", err);
+    if (err?.message?.includes("not configured")) {
+      return res.status(503).json({ message: err.message });
+    }
     res.status(500).json({ message: "Failed to analyze sentiment" });
   }
 });

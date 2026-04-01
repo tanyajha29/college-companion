@@ -1,0 +1,2 @@
+ALTER TABLE class_session
+ADD COLUMN IF NOT EXISTS roomno TEXT;

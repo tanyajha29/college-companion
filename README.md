@@ -1,7 +1,7 @@
 <h1 align="center">College Companion</h1>
 
 <p align="center">
-  <img src="client/public/readme_logo.png" width="120" alt="College Companion Logo" />
+  <img src="docs/screenshots/logo.png" width="120" alt="College Companion Logo" />
 </p>
 
 <p align="center">
@@ -22,7 +22,7 @@
 
 ## Overview
 
-College Companion helps admins, faculty/staff, and students manage academics, operations, and career readiness in one place. It combines secure authentication, role-based dashboards, audit logging, payments, document verification, attendance analytics, and AI features like resume compatibility scoring.
+College Companion helps admins, faculty/staff, and students manage academics, operations, and career readiness in one place. It combines secure authentication, role-based dashboards, audit logging, payments, document verification, attendance analytics, internship applications, and AI-powered resume compatibility scoring (Ollama-first).
 
 ---
 
@@ -42,8 +42,8 @@ College Companion helps admins, faculty/staff, and students manage academics, op
 - Reminders and announcements
 
 ### Placement & Career
-- Internship tracker with status updates
-- Resume compatibility scoring (PDF + JD)
+- Internship tracker with status updates & next interview dates
+- Resume compatibility scoring (text or PDF) powered by Ollama, with ATS-style JSON output
 
 ### Documents & Payments
 - Secure document vault (S3) with admin verification
@@ -52,33 +52,23 @@ College Companion helps admins, faculty/staff, and students manage academics, op
 
 ### Realtime & AI
 - Socket.io realtime notifications
-- Ollama-based AI scoring and insights
+- Ollama-first AI scoring and insights (OpenAI is optional fallback)
 
 ---
 
-## Screenshots (Later)
+## Screenshots
 
-Create a folder and drop your images here:
-```
-docs/screenshots/
-```
+| Home | Login | Timetable |
+| --- | --- | --- |
+| ![Home](docs/screenshorts/home.png) | ![Login](docs/screenshorts/login.png) | ![Timetable](docs/screenshorts/timetable.png) |
 
-Suggested filenames:
-```
-docs/screenshots/login.png
-docs/screenshots/dashboard-admin.png
-docs/screenshots/dashboard-student.png
-docs/screenshots/attendance.png
-docs/screenshots/internship.png
-docs/screenshots/documents.png
-docs/screenshots/payments.png
-docs/screenshots/ai-resume-score.png
-```
+| Attendance Tracker | Reminders |
+| --- | --- |
+| ![Attendance Tracker](docs/screenshorts/attendence%20Tracker.png) | ![Reminders](docs/screenshorts/remainders.png) |
 
-Embed in README:
-```md
-![Login](docs/screenshots/login.png)
-```
+| Internship Application | Resume Compatibility |
+| --- | --- |
+| ![Internship Application](docs/screenshorts/internship%20application.png) | ![Resume Compatibility](docs/screenshorts/resume_compatibility.png) |
 
 ---
 
@@ -184,8 +174,8 @@ server/
 - `POST /api/payments/verify`
 
 **AI**
-- `POST /api/ai/resume-score`
-- `POST /api/ai/resume-score-pdf`
+- `POST /api/ai/resume-score` (Ollama-first JSON ATS scoring)
+- `POST /api/ai/resume-score-pdf` (PDF -> text -> ATS scoring)
 
 ---
 
@@ -230,12 +220,17 @@ AI (Local)
 docker compose up --build
 ```
 
-3. Run migrations.
+3. Pull your Ollama model (on host/WSL) before scoring resumes (default: `mistral:7b`):
+```bash
+ollama pull mistral:7b
+```
+
+4. Run migrations.
 ```bash
 docker compose exec server npm run migrate
 ```
 
-4. Load demo data (recommended for screenshots).
+5. Load demo data (recommended for screenshots).
 ```bash
 docker compose ps -q db
 docker cp server/src/seeds/full_demo_data.sql <DB_CONTAINER_ID>:/tmp/full_demo_data.sql

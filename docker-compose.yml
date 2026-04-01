@@ -6,7 +6,6 @@ services:
       POSTGRES_PASSWORD: root
       POSTGRES_DB: college_companion
     ports:
-      # Host port changed to avoid clashing with any local PostgreSQL instance
       - "5433:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
@@ -25,12 +24,15 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     env_file:
       - ./server/.env
     environment:
       DB_HOST: db
       REDIS_URL: redis://redis:6379
       CLIENT_ORIGIN: http://localhost:5173
+      OLLAMA_URL: http://host.docker.internal:11434
     ports:
       - "5000:5000"
     depends_on:
