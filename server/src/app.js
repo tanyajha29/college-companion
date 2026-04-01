@@ -23,36 +23,53 @@ import dashboardRoutes from "./features/dashboard/routes.js";
 
 const app = express();
 
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      baseUri: ["'self'"],
-      frameAncestors: ["'none'"],
-    },
-  },
-}));
+
+// 🔐 Helmet (safe default)
+app.use(helmet());
+
+
+// 🔥 FIXED CORS CONFIG (IMPORTANT)
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://15.207.59.143:5173",
+  "https://d3w2hxz0opjfl8.cloudfront.net"
+];
 
 app.use(cors({
-  origin: (origin, callback) => {
-    // In dev (containers/local) allow all to avoid mismatched host/port issues.
-    if (!origin || env.nodeEnv !== "production") return callback(null, true);
-    const allowed = Array.isArray(env.clientOrigin) ? env.clientOrigin : [env.clientOrigin];
-    if (allowed.includes(origin)) return callback(null, true);
-    return callback(new Error("Not allowed by CORS"));
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps / curl)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("CORS not allowed"));
+    }
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
 }));
 
+
+// 🛠️ IMPORTANT: Preflight requests handle
+app.options("*", cors());
+
+
+// 📦 Body parser
 app.use(express.json({ limit: "2mb" }));
+
+
+// 🧾 Logger
 app.use(requestLogger);
 
+
+// 🏠 Health check
 app.get("/", (_req, res) => {
   res.send("🚀 College Companion Backend is running...");
 });
 
+
+// 🔗 Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/staff", staffRoutes);
@@ -69,7 +86,13 @@ app.use("/api/cbc", cbcRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
+
+// ❌ Not found
 app.use(notFound);
+
+
+// ⚠️ Error handler
 app.use(errorHandler);
+
 
 export default app;
