@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { CalendarDays, Plus, Trash2, Edit, X, Save } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";

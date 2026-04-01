@@ -90,7 +90,7 @@ function MarkAttendance({ apiBase }: { apiBase: string }) {
 
     // 2. Fetch sessions when a department is selected
     useEffect(() => {
-        if (selectedDepartment) {
+        if (selectedDepartment && selectedYear) {
             setIsLoading(true);
             setSessions([]); // Clear previous sessions
             setSelectedSession(''); // Reset session selection
@@ -98,13 +98,13 @@ function MarkAttendance({ apiBase }: { apiBase: string }) {
             
             axios.get(`${apiBase}/api/attendance/sessions`, {
                 headers: { Authorization: `Bearer ${token}` },
-                params: { departmentId: selectedDepartment }
+                params: { departmentId: selectedDepartment, year: selectedYear }
             })
             .then(res => setSessions(res.data))
             .catch(err => console.error("Failed to fetch sessions:", err))
             .finally(() => setIsLoading(false));
         }
-    }, [selectedDepartment, token]);
+    }, [selectedDepartment, selectedYear, token]);
 
     // 3. Fetch student roster when a session is selected
     useEffect(() => {

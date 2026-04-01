@@ -1,6 +1,7 @@
 
 import { motion } from "framer-motion";
 import { Users, Briefcase, BookOpen } from "lucide-react";
+import type { ReactNode } from "react";
 
 interface HomeSectionProps {
   role: string;
@@ -11,7 +12,7 @@ const cardVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
-const cardData: { [key: string]: { title: string; icon: JSX.Element; color: string; description: string; } } = {
+const cardData: { [key: string]: { title: string; icon: ReactNode; color: string; description: string } } = {
   admin: {
     title: "System Overview",
     icon: <Users size={32} className="text-blue-500" />,

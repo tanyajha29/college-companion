@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../shared/api";
-import { Plus, Upload, X, Clock, DollarSign, Calendar, Mail, Building, Briefcase, ChevronRight, Save, CornerUpLeft } from "lucide-react"; 
+import { Plus, Upload, X, Clock, DollarSign, Calendar, Mail, Building, Briefcase, Save, CornerUpLeft } from "lucide-react"; 
 import { motion, AnimatePresence } from "framer-motion";
 
 // --- Configuration ---
-const API_BASE = (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
 const AI_ENABLED = false;
 
 // --- Interfaces ---
