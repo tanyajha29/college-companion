@@ -1,10 +1,8 @@
-import OpenAI from "openai";
 import { env } from "../../config/env.js";
+import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
 
-const hasOllama = Boolean(env.ollama?.url);
-const hasOpenAI = Boolean(env.openai?.apiKey);
-
-const DEFAULT_MODEL = env.ollama?.model || "llama3.1:8b";
+const bedrockRegion = env.bedrock?.region || "us-east-1";
+const bedrockModelId = env.bedrock?.modelId || "us.amazon.nova-lite-v1:0";
 
 const safeJsonParse = (text) => {
   try {
@@ -23,6 +21,10 @@ const safeJsonParse = (text) => {
 const normalizeResponse = (rawText) => {
   const parsed = safeJsonParse(rawText) || {};
   const toArray = (val) => (Array.isArray(val) ? val : val ? [String(val)] : []);
+  const toNumber = (val) => {
+    const num = Number(val);
+    return Number.isFinite(num) ? num : null;
+  };
 
   return {
     score: Number.isFinite(parsed.score) ? Math.max(0, Math.min(100, parsed.score)) : 0,
@@ -30,8 +32,8 @@ const normalizeResponse = (rawText) => {
     strengths: toArray(parsed.strengths),
     gaps: toArray(parsed.gaps),
     suggestions: toArray(parsed.suggestions),
-    keywordMatch: parsed.keywordMatch || parsed.keyword_match || null,
-    atsReadiness: parsed.atsReadiness || parsed.ats_readiness || null,
+    keywordMatch: toNumber(parsed.keywordMatch ?? parsed.keyword_match),
+    atsReadiness: toNumber(parsed.atsReadiness ?? parsed.ats_readiness),
     raw: rawText,
   };
 };
@@ -55,37 +57,31 @@ Job Description:
 ${jobDescription}
 `.trim();
 
-const callOllama = async (prompt) => {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 60000);
-  const response = await fetch(`${env.ollama.url}/api/generate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: DEFAULT_MODEL,
-      prompt,
-      stream: false,
-      options: { temperature: 0.2 },
-    }),
-    signal: controller.signal,
-  });
-  clearTimeout(timeout);
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`Ollama error: ${err}`);
-  }
-  const data = await response.json();
-  return data.response || "";
-};
+const bedrock = new BedrockRuntimeClient({
+  region: bedrockRegion,
+});
 
-const callOpenAI = async (prompt) => {
-  const client = new OpenAI({ apiKey: env.openai.apiKey });
-  const response = await client.responses.create({
-    model: env.openai.model || "gpt-4o-mini",
-    input: prompt,
-    temperature: 0.2,
+const callBedrock = async (prompt) => {
+  const command = new ConverseCommand({
+    modelId: bedrockModelId,
+    messages: [
+      {
+        role: "user",
+        content: [{ text: prompt }],
+      },
+    ],
+    inferenceConfig: {
+      temperature: 0.2,
+      maxTokens: 1200,
+    },
   });
-  return response.output_text || "";
+
+  const response = await bedrock.send(command);
+  const text = response?.output?.message?.content?.[0]?.text;
+  if (!text) {
+    throw new Error("Bedrock returned no content");
+  }
+  return text;
 };
 
 export const scoreResume = async ({ resumeText, jobDescription }) => {
@@ -96,13 +92,17 @@ export const scoreResume = async ({ resumeText, jobDescription }) => {
   const prompt = buildPrompt({ resumeText, jobDescription });
   let raw;
 
-  if (hasOllama) {
-    raw = await callOllama(prompt);
-  } else if (hasOpenAI) {
-    raw = await callOpenAI(prompt);
-  } else {
+  if (!bedrockRegion || !bedrockModelId) {
     const err = new Error("AI service not configured");
     err.statusCode = 503;
+    throw err;
+  }
+
+  try {
+    raw = await callBedrock(prompt);
+  } catch (e) {
+    const err = new Error(`Bedrock error: ${e.message || e}`);
+    err.statusCode = 500;
     throw err;
   }
 

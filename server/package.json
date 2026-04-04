@@ -9,6 +9,7 @@
     "migrate": "node apply-migration.js"
   },
   "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.1024.0",
     "@aws-sdk/client-s3": "^3.758.0",
     "@aws-sdk/s3-request-presigner": "^3.758.0",
     "bcrypt": "^5.1.1",

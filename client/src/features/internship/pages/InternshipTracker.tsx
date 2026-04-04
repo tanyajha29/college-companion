@@ -513,7 +513,7 @@ const ApplicationDetailsModal: React.FC<ApplicationDetailsModalProps> = ({ appli
 };
 
 // --- 6. UploadDocuments (Placeholder for REQ-12) ---
-const UploadDocuments: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
+const UploadDocuments: React.FC<{ onCancel: () => void; onUploaded?: (doc: any) => void }> = ({ onCancel, onUploaded }) => {
     const [file, setFile] = useState<File | null>(null);
     const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
 
@@ -554,7 +554,7 @@ const UploadDocuments: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
                 body: file,
             });
 
-            await api.post("/documents/confirm", {
+            const confirmed = await api.post("/documents/confirm", {
                 key: presignData?.key,
                 fileName: file.name,
                 mimeType: file.type,
@@ -563,6 +563,16 @@ const UploadDocuments: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
 
             if (fileUrl) {
                 console.log("File will be accessible at:", fileUrl);
+            }
+
+            if (onUploaded) {
+                onUploaded({
+                    ...(confirmed as any),
+                    file_url: fileUrl ?? (confirmed as any)?.file_url ?? (confirmed as any)?.fileUrl,
+                    fileName: file.name,
+                    status: (confirmed as any)?.status ?? "pending",
+                    uploadedAt: (confirmed as any)?.created_at ?? new Date().toISOString(),
+                });
             }
 
             setUploadStatus('success');
@@ -814,13 +824,17 @@ const InternshipTrackerPage: React.FC = () => {
         const loadDocs = async () => {
             try {
                 const res = await api.get("/documents/my");
-                setDocuments(res.data || []);
+                const docs = (res as any)?.data ?? res ?? [];
+                setDocuments(Array.isArray(docs) ? docs : []);
             } catch {
                 // ignore
             }
         };
         loadDocs();
     }, []);
+    const handleUploadedDocument = (doc: any) => {
+        setDocuments(prev => [doc, ...(prev || [])]);
+    };
 
 
     // Data Submission (Create) - REQ-10
@@ -1004,7 +1018,7 @@ const InternshipTrackerPage: React.FC = () => {
                             transition={{ duration: 0.3 }}
                             className={`max-w-4xl mx-auto mb-10 ${cardClasses} overflow-hidden`}
                         >
-                            <UploadDocuments onCancel={handleCancel} />
+                            <UploadDocuments onCancel={handleCancel} onUploaded={handleUploadedDocument} />
                         </motion.div>
                         )}
                     </AnimatePresence>
@@ -1038,16 +1052,38 @@ const InternshipTrackerPage: React.FC = () => {
                 {/* Uploaded Documents */}
                 <div className={`max-w-6xl mx-auto text-left mt-10 ${cardClasses}`}>
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Uploaded Documents</h3>
-                    {documents.length === 0 ? (
+                    {(documents || []).length === 0 ? (
                         <p className="text-sm text-gray-500 dark:text-gray-400">No documents uploaded yet.</p>
                     ) : (
                         <div className="grid gap-3">
-                            {documents.map((doc) => (
-                                <div key={doc.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
-                                    <p className="font-medium">{doc.file_name}</p>
-                                    <p className="text-xs text-gray-500">Status: {doc.status}</p>
-                                </div>
-                            ))}
+                            {(documents || []).map((doc, idx) => {
+                                const downloadUrl = doc.file_url || doc.fileUrl || doc.url;
+                                const name = doc.file_name || doc.fileName || `Document ${idx + 1}`;
+                                const uploadedAt = doc.uploadedAt || doc.created_at;
+                                return (
+                                    <div key={doc.id || doc.key || idx} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                        <div>
+                                            <p className="font-medium">{name}</p>
+                                            <p className="text-xs text-gray-500">
+                                                Status: {doc.status || "uploaded"}
+                                                {uploadedAt ? ` • Uploaded: ${new Date(uploadedAt).toLocaleString()}` : ""}
+                                            </p>
+                                        </div>
+                                        {downloadUrl ? (
+                                            <a
+                                                href={downloadUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
+                                            >
+                                                Download
+                                            </a>
+                                        ) : (
+                                            <span className="text-xs text-gray-400">No download link</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </div>

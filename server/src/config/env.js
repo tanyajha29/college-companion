@@ -43,8 +43,8 @@ export const env = {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
-  ollama: {
-    url: process.env.OLLAMA_URL || "http://localhost:11434",
-    model: process.env.OLLAMA_MODEL || "llama3.1:8b",
+  bedrock: {
+    region: process.env.BEDROCK_REGION || "us-east-1",
+    modelId: process.env.BEDROCK_MODEL_ID || "us.amazon.nova-lite-v1:0",
   },
 };
