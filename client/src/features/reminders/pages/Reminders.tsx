@@ -21,7 +21,7 @@ type Reminder = {
  * Utility to fetch the current user's details from storage/context.
  */
 const getCurrentUser = () => {
-  const role = localStorage.getItem("role") || "student";
+  const role = (localStorage.getItem("role") || "student").toLowerCase();
   // Ensure department and division are correctly cast/typed for use in the API params
   const department = (localStorage.getItem("department") as Department) || "INFT";
   const division = (localStorage.getItem("division") as Division) || "A";
@@ -40,7 +40,7 @@ const fetchRemindersFromDB = async (): Promise<Reminder[]> => {
 
   // Pass user context as query parameters for the server to filter
   const params = {
-    role: user.role,
+    role: user.role.toLowerCase(),
     department: user.department,
     division: user.division,
   };
@@ -83,7 +83,8 @@ const saveReminderToDB = async (reminder: Omit<Reminder, "id">): Promise<Reminde
 
 export default function ReminderComponent() {
   const user = getCurrentUser();
-  const isEditable = user.role === "staff" || user.role === "admin";
+  const normalizedRole = (user.role || "student").toLowerCase();
+  const isEditable = normalizedRole === "staff" || normalizedRole === "admin";
 
   const initialFormState = {
     title: "",

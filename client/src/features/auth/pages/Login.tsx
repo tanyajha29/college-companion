@@ -82,15 +82,16 @@ export default function Login() {
       }
 
       const userPayload = data.user || {};
-      login(
-        {
-          id: String(userPayload.userId ?? ""),
-          name: userPayload.username || userPayload.name || "",
-          email: userPayload.email || email,
-          role: (userPayload.role || role) as any,
-        },
-        data.token
-      );
+      const normalizedRole = String(userPayload.role || role || "student").toLowerCase();
+      const userForStore = {
+        id: String(userPayload.userId ?? ""),
+        name: userPayload.username || userPayload.name || "",
+        email: userPayload.email || email,
+        role: normalizedRole as any,
+      };
+
+      login(userForStore, data.token);
+      localStorage.setItem("role", normalizedRole);
 
       nav("/dashboard");
     } catch (error: any) {

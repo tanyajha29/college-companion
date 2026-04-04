@@ -39,7 +39,7 @@ type StudentSummary = {
 // Main Page Component
 // ===================================================================
 export default function AttendancePage() {
-    const role = localStorage.getItem("role") || "student";
+    const role = (localStorage.getItem("role") || "student").toLowerCase();
     const API_BASE = (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
 
     return (
