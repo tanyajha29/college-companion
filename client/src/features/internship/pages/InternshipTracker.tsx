@@ -4,9 +4,6 @@ import api from "../../../shared/api";
 import { Plus, Upload, X, Clock, DollarSign, Calendar, Mail, Building, Briefcase, Save, CornerUpLeft } from "lucide-react"; 
 import { motion, AnimatePresence } from "framer-motion";
 
-// --- Configuration ---
-const AI_ENABLED = false;
-
 // --- Interfaces ---
 
 // Define the structure of data returned from the backend/used in the form
