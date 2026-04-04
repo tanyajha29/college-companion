@@ -339,7 +339,7 @@ const ApplicationList: React.FC<ApplicationListProps> = ({ applications, onSelec
             
             {/* List of Applications */}
             <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                {applications.map((app) => (
+                {(applications || []).map((app) => (
                     <ApplicationRow 
                         key={app.internshipid} 
                         application={app}
@@ -532,25 +532,38 @@ const UploadDocuments: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
 
         setUploadStatus('uploading');
         try {
-            const presignRes = await api.post("/documents/presign", {
+            const presignRes = await api.post("/api/documents/presign", {
                 fileName: file.name,
                 contentType: file.type,
                 label: "Internship Document",
             });
-            const presignData = presignRes.data;
+            console.log("presign response:", presignRes.data);
 
-            await fetch(presignData.uploadUrl, {
+            const uploadUrl = presignRes?.data?.uploadUrl;
+            const fileUrl = presignRes?.data?.fileUrl;
+
+            if (!uploadUrl) {
+                throw new Error("uploadUrl missing from presign response");
+            }
+
+            const presignData = presignRes?.data ?? {};
+
+            await fetch(uploadUrl, {
                 method: "PUT",
                 headers: { "Content-Type": file.type },
                 body: file,
             });
 
-            await api.post("/documents/confirm", {
-                key: presignData.key,
+            await api.post("/api/documents/confirm", {
+                key: presignData?.key,
                 fileName: file.name,
                 mimeType: file.type,
                 label: "Internship Document",
             });
+
+            if (fileUrl) {
+                console.log("File will be accessible at:", fileUrl);
+            }
 
             setUploadStatus('success');
             setFile(null);
@@ -774,10 +787,11 @@ const InternshipTrackerPage: React.FC = () => {
                 nav("/login");
                 return;
             }
-            const response = await api.get("/internships");
-            const data: ApplicationData[] = response.data;
+            const res = await api.get("/api/internships");
+            const apps = res?.data?.applications ?? res?.data ?? [];
+            const normalizedApps: ApplicationData[] = Array.isArray(apps) ? apps : [];
             // Ensure stipend is a number (it comes back as string from PostgreSQL JSON usually)
-            const cleanedData = data.map(app => ({
+            const cleanedData = normalizedApps.map(app => ({
                 ...app,
                 stipend: typeof app.stipend === 'string' ? parseInt(app.stipend, 10) : app.stipend
             }));

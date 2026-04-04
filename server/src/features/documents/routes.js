@@ -1,7 +1,7 @@
 import express from "express";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { s3Client } from "../../lib/s3.js";
+import { s3 } from "../../lib/s3.js";
 import { env } from "../../config/env.js";
 import authMiddleware, { authorizeRoles } from "../../shared/middleware/auth.js";
 import db from "../../db/pool.js";
@@ -10,24 +10,42 @@ import { logAudit } from "../audit/auditService.js";
 const router = express.Router();
 
 router.post("/presign", authMiddleware, async (req, res) => {
-  try {
-    const { fileName, contentType, label } = req.body;
-    if (!fileName || !contentType) {
-      return res.status(400).json({ message: "fileName and contentType are required." });
-    }
+  const { fileName, contentType, label } = req.body;
 
+  // Validate request payload
+  if (!fileName || !contentType) {
+    return res.status(400).json({ message: "fileName and contentType are required." });
+  }
+
+  // Validate required AWS env vars
+  const missingEnv = [];
+  if (!env.s3.bucket) missingEnv.push("S3_BUCKET_NAME / AWS_S3_BUCKET");
+  if (!env.s3.region) missingEnv.push("AWS_REGION");
+  if (!env.s3.accessKeyId) missingEnv.push("AWS_ACCESS_KEY_ID");
+  if (!env.s3.secretAccessKey) missingEnv.push("AWS_SECRET_ACCESS_KEY");
+
+  if (missingEnv.length) {
+    console.error("Presign error: missing env vars ->", missingEnv.join(", "));
+    return res
+      .status(500)
+      .json({ message: `S3 configuration missing: ${missingEnv.join(", ")}` });
+  }
+
+  try {
     const key = `documents/${req.user.userId}/${Date.now()}-${fileName}`;
     const command = new PutObjectCommand({
       Bucket: env.s3.bucket,
       Key: key,
       ContentType: contentType,
     });
-    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 });
 
-    res.json({ uploadUrl, key, label });
+    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
+    const fileUrl = `https://${env.s3.bucket}.s3.${env.s3.region}.amazonaws.com/${key}`;
+
+    return res.json({ uploadUrl, fileUrl, key, label });
   } catch (err) {
-    console.error("Presign error:", err);
-    res.status(500).json({ message: "Failed to generate upload URL." });
+    console.error("Presign generation error:", err);
+    return res.status(500).json({ message: "Failed to generate upload URL." });
   }
 });
 
