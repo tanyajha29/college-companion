@@ -67,13 +67,16 @@ Job Description:
 ${jobDescription}
 `.trim();
 
+const BEDROCK_REGION = "us-east-1";
+const BEDROCK_MODEL_ID = "us.amazon.nova-lite-v1:0";
+
 const bedrockClient = new BedrockRuntimeClient({
-  region: "us-east-1",
+  region: BEDROCK_REGION,
 });
 
 const callBedrock = async (prompt) => {
   const command = new ConverseCommand({
-    modelId: "us.amazon.nova-lite-v1:0",
+    modelId: BEDROCK_MODEL_ID,
     messages: [
       {
         role: "user",
