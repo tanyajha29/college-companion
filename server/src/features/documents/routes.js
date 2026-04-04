@@ -21,14 +21,14 @@ router.post("/presign", authMiddleware, async (req, res) => {
   const missingEnv = [];
   if (!env.s3.bucket) missingEnv.push("S3_BUCKET_NAME / AWS_S3_BUCKET");
   if (!env.s3.region) missingEnv.push("AWS_REGION");
-  if (!env.s3.accessKeyId) missingEnv.push("AWS_ACCESS_KEY_ID");
-  if (!env.s3.secretAccessKey) missingEnv.push("AWS_SECRET_ACCESS_KEY");
-
   if (missingEnv.length) {
     console.error("Presign error: missing env vars ->", missingEnv.join(", "));
     return res
       .status(500)
       .json({ message: `S3 configuration missing: ${missingEnv.join(", ")}` });
+  }
+  if (!env.s3.accessKeyId || !env.s3.secretAccessKey) {
+    console.warn("Presign warning: using IAM role/default credentials (no AWS_ACCESS_KEY_ID/SECRET set)");
   }
 
   try {
@@ -42,7 +42,7 @@ router.post("/presign", authMiddleware, async (req, res) => {
     const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
     const fileUrl = `https://${env.s3.bucket}.s3.${env.s3.region}.amazonaws.com/${key}`;
 
-    return res.json({ uploadUrl, fileUrl, key, label });
+    return res.json({ uploadUrl, fileUrl, key });
   } catch (err) {
     console.error("Presign generation error:", err);
     return res.status(500).json({ message: "Failed to generate upload URL." });
