@@ -539,14 +539,15 @@ const UploadDocuments: React.FC<{ onCancel: () => void; onUploaded?: (doc: any) 
             });
             console.log("presign response:", presignRes);
 
-            const uploadUrl = (presignRes as any)?.uploadUrl ?? (presignRes as any)?.data?.uploadUrl;
-            const fileUrl = (presignRes as any)?.fileUrl ?? (presignRes as any)?.data?.fileUrl;
+            const uploadUrl = presignRes?.data?.uploadUrl;
+            const fileUrl = presignRes?.data?.fileUrl;
+            const key = presignRes?.data?.key;
 
             if (!uploadUrl) {
                 throw new Error("uploadUrl missing from presign response");
             }
 
-            const presignData = (presignRes as any) ?? {};
+            const presignData = presignRes?.data ?? {};
 
             await fetch(uploadUrl, {
                 method: "PUT",
@@ -555,7 +556,7 @@ const UploadDocuments: React.FC<{ onCancel: () => void; onUploaded?: (doc: any) 
             });
 
             const confirmed = await api.post("/documents/confirm", {
-                key: presignData?.key,
+                key: key ?? presignData?.key,
                 fileName: file.name,
                 mimeType: file.type,
                 label: "Internship Document",
@@ -798,7 +799,8 @@ const InternshipTrackerPage: React.FC = () => {
                 return;
             }
             const res = await api.get("/internships");
-            const apps = (res as any)?.applications ?? res ?? [];
+            console.log("fetch applications response:", res);
+            const apps = res?.data?.applications ?? res?.data ?? res ?? [];
             const normalizedApps: ApplicationData[] = Array.isArray(apps) ? apps : [];
             // Ensure stipend is a number (it comes back as string from PostgreSQL JSON usually)
             const cleanedData = normalizedApps.map(app => ({
