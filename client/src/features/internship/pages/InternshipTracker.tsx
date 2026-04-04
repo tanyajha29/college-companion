@@ -661,11 +661,14 @@ const ResumeScorer: React.FC = () => {
     const [loading, setLoading] = useState(false);
 
     const handleScore = async () => {
-        if (!AI_ENABLED) {
-            setResult({ summary: "Resume scoring is disabled in this build." });
+        if (!jobDescription.trim()) {
+            setResult({ summary: "Job description is required." });
             return;
         }
-        if ((!resumeText.trim() && !resumeFile) || !jobDescription.trim()) return;
+        if (!resumeFile && !resumeText.trim()) {
+            setResult({ summary: "Provide resume text or upload a PDF." });
+            return;
+        }
         try {
             setLoading(true);
             let data;
@@ -673,17 +676,22 @@ const ResumeScorer: React.FC = () => {
                 const form = new FormData();
                 form.append("resume", resumeFile);
                 form.append("jobDescription", jobDescription);
-                const res = await api.post("/ai/resume-score-pdf", form, {
-                    headers: { "Content-Type": "multipart/form-data" },
-                });
-                data = res.data;
+                data = await api.post("/ai/resume-score-pdf", form);
             } else {
-                const res = await api.post("/ai/resume-score", { resumeText, jobDescription });
-                data = res.data;
+                data = await api.post("/ai/resume-score", { resumeText, jobDescription });
             }
             setResult(data);
         } catch (e: any) {
-            setResult({ summary: e.message || "Failed to score resume" });
+            console.error("Resume scoring error:", e);
+            setResult({
+                score: 0,
+                summary: "Failed to generate compatibility score.",
+                strengths: [],
+                gaps: [],
+                suggestions: [],
+                keywordMatch: 0,
+                atsReadiness: 0,
+            });
         } finally {
             setLoading(false);
         }
