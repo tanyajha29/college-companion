@@ -1,4 +1,4 @@
-import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
+import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
 
 const safeJsonParse = (text) => {
   try {
@@ -68,39 +68,33 @@ ${jobDescription}
 `.trim();
 
 const bedrockClient = new BedrockRuntimeClient({
-  region: "ap-south-1",
+  region: "us-east-1",
 });
 
 const callBedrock = async (prompt) => {
-  const command = new InvokeModelCommand({
-    modelId: "amazon.titan-text-lite-v1",
-    body: JSON.stringify({
-      inputText: prompt,
-      textGenerationConfig: {
-        maxTokenCount: 700,
-        temperature: 0.3,
+  const command = new ConverseCommand({
+    modelId: "us.amazon.nova-lite-v1:0",
+    messages: [
+      {
+        role: "user",
+        content: [{ text: prompt }],
       },
-    }),
-    contentType: "application/json",
-    accept: "application/json",
+    ],
+    inferenceConfig: {
+      temperature: 0.3,
+      maxTokens: 700,
+    },
   });
 
   const response = await bedrockClient.send(command);
-  const rawText = new TextDecoder("utf-8").decode(response.body);
+  const rawText = response?.output?.message?.content?.[0]?.text || "";
   console.log("Bedrock raw response:", rawText);
 
-  const parsedBody = safeJsonParse(rawText) || {};
-  const outputText =
-    parsedBody.outputText ||
-    parsedBody.results?.[0]?.outputText ||
-    parsedBody.completions?.[0]?.data?.text ||
-    "";
-
-  if (!outputText) {
+  if (!rawText) {
     throw new Error("Bedrock returned no content");
   }
 
-  return outputText;
+  return rawText;
 };
 
 export const scoreResume = async ({ resumeText, jobDescription }) => {
