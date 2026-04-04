@@ -532,21 +532,21 @@ const UploadDocuments: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
 
         setUploadStatus('uploading');
         try {
-            const presignRes = await api.post("/api/documents/presign", {
+            const presignRes = await api.post("/documents/presign", {
                 fileName: file.name,
                 contentType: file.type,
                 label: "Internship Document",
             });
-            console.log("presign response:", presignRes.data);
+            console.log("presign response:", presignRes);
 
-            const uploadUrl = presignRes?.data?.uploadUrl;
-            const fileUrl = presignRes?.data?.fileUrl;
+            const uploadUrl = (presignRes as any)?.uploadUrl ?? (presignRes as any)?.data?.uploadUrl;
+            const fileUrl = (presignRes as any)?.fileUrl ?? (presignRes as any)?.data?.fileUrl;
 
             if (!uploadUrl) {
                 throw new Error("uploadUrl missing from presign response");
             }
 
-            const presignData = presignRes?.data ?? {};
+            const presignData = (presignRes as any) ?? {};
 
             await fetch(uploadUrl, {
                 method: "PUT",
@@ -554,7 +554,7 @@ const UploadDocuments: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
                 body: file,
             });
 
-            await api.post("/api/documents/confirm", {
+            await api.post("/documents/confirm", {
                 key: presignData?.key,
                 fileName: file.name,
                 mimeType: file.type,
@@ -787,8 +787,8 @@ const InternshipTrackerPage: React.FC = () => {
                 nav("/login");
                 return;
             }
-            const res = await api.get("/api/internships");
-            const apps = res?.data?.applications ?? res?.data ?? [];
+            const res = await api.get("/internships");
+            const apps = (res as any)?.applications ?? res ?? [];
             const normalizedApps: ApplicationData[] = Array.isArray(apps) ? apps : [];
             // Ensure stipend is a number (it comes back as string from PostgreSQL JSON usually)
             const cleanedData = normalizedApps.map(app => ({
