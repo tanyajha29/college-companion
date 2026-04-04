@@ -539,7 +539,7 @@ const UploadDocuments: React.FC<{ onCancel: () => void; onUploaded?: (doc: any) 
             });
             console.log("presign response:", presignRes);
 
-            const presignData = presignRes?.data ?? {};
+            const presignData = (presignRes as any)?.data ?? presignRes ?? {};
             const uploadUrl = presignData.uploadUrl;
             const fileUrl = presignData.fileUrl;
             const key = presignData.key;
