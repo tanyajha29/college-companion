@@ -539,15 +539,15 @@ const UploadDocuments: React.FC<{ onCancel: () => void; onUploaded?: (doc: any) 
             });
             console.log("presign response:", presignRes);
 
-            const uploadUrl = presignRes?.data?.uploadUrl;
-            const fileUrl = presignRes?.data?.fileUrl;
-            const key = presignRes?.data?.key;
+            const presignData = presignRes?.data ?? {};
+            const uploadUrl = presignData.uploadUrl;
+            const fileUrl = presignData.fileUrl;
+            const key = presignData.key;
 
             if (!uploadUrl) {
+                console.error("presign response missing uploadUrl", presignData);
                 throw new Error("uploadUrl missing from presign response");
             }
-
-            const presignData = presignRes?.data ?? {};
 
             console.log("uploading to:", uploadUrl);
             const putRes = await fetch(uploadUrl, {
