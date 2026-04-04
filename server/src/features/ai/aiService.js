@@ -1,8 +1,4 @@
-import { env } from "../../config/env.js";
-import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
-
-const bedrockRegion = env.bedrock?.region || "us-east-1";
-const bedrockModelId = env.bedrock?.modelId || "us.amazon.nova-lite-v1:0";
+import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
 
 const safeJsonParse = (text) => {
   try {
@@ -57,31 +53,36 @@ Job Description:
 ${jobDescription}
 `.trim();
 
-const bedrock = new BedrockRuntimeClient({
-  region: bedrockRegion,
-});
+const bedrockClient = new BedrockRuntimeClient({ region: "ap-south-1" });
 
 const callBedrock = async (prompt) => {
-  const command = new ConverseCommand({
-    modelId: bedrockModelId,
-    messages: [
-      {
-        role: "user",
-        content: [{ text: prompt }],
+  const command = new InvokeModelCommand({
+    modelId: "amazon.titan-text-lite-v1",
+    body: JSON.stringify({
+      inputText: prompt,
+      textGenerationConfig: {
+        maxTokenCount: 500,
+        temperature: 0.3,
       },
-    ],
-    inferenceConfig: {
-      temperature: 0.2,
-      maxTokens: 1200,
-    },
+    }),
+    contentType: "application/json",
+    accept: "application/json",
   });
 
-  const response = await bedrock.send(command);
-  const text = response?.output?.message?.content?.[0]?.text;
-  if (!text) {
+  const response = await bedrockClient.send(command);
+  const rawText = new TextDecoder("utf-8").decode(response.body);
+  console.log("Bedrock raw response:", rawText);
+
+  const parsedBody = safeJsonParse(rawText) || {};
+  const outputText =
+    parsedBody.outputText ||
+    parsedBody.results?.[0]?.outputText ||
+    parsedBody.completions?.[0]?.data?.text ||
+    "";
+  if (!outputText) {
     throw new Error("Bedrock returned no content");
   }
-  return text;
+  return outputText;
 };
 
 export const scoreResume = async ({ resumeText, jobDescription }) => {
@@ -92,18 +93,11 @@ export const scoreResume = async ({ resumeText, jobDescription }) => {
   const prompt = buildPrompt({ resumeText, jobDescription });
   let raw;
 
-  if (!bedrockRegion || !bedrockModelId) {
-    const err = new Error("AI service not configured");
-    err.statusCode = 503;
-    throw err;
-  }
-
   try {
     raw = await callBedrock(prompt);
   } catch (e) {
-    const err = new Error(`Bedrock error: ${e.message || e}`);
-    err.statusCode = 500;
-    throw err;
+    console.error("Bedrock error:", e);
+    return { message: "AI service failed" };
   }
 
   return normalizeResponse(raw);
