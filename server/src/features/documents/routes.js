@@ -32,11 +32,11 @@ router.post("/presign", authMiddleware, async (req, res) => {
   }
 
   try {
-    const key = `documents/${req.user.userId}/${Date.now()}-${fileName}`;
+    const safeName = String(fileName).replace(/\s+/g, "_");
+    const key = `documents/${req.user.userId}/${Date.now()}-${safeName}`;
     const command = new PutObjectCommand({
       Bucket: env.s3.bucket,
       Key: key,
-      ContentType: contentType,
     });
 
     const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 });

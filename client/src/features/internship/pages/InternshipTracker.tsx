@@ -549,11 +549,16 @@ const UploadDocuments: React.FC<{ onCancel: () => void; onUploaded?: (doc: any) 
 
             const presignData = presignRes?.data ?? {};
 
-            await fetch(uploadUrl, {
+            console.log("uploading to:", uploadUrl);
+            const putRes = await fetch(uploadUrl, {
                 method: "PUT",
-                headers: { "Content-Type": file.type },
                 body: file,
             });
+            if (!putRes.ok) {
+                const errText = await putRes.text().catch(() => "");
+                console.error("S3 upload failed:", putRes.status, errText);
+                throw new Error(`S3 upload failed with status ${putRes.status}`);
+            }
 
             const confirmed = await api.post("/documents/confirm", {
                 key: key ?? presignData?.key,
